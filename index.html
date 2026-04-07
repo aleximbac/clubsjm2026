@@ -789,6 +789,48 @@
                     onclick="volDoGroupChange()">✅ Confirmar Cambio Definitivo</button>
             </div>
 
+            <!-- VOL-JUSTIFICATION: formulario para que el voluntario justifique su falta -->
+            <div class="view" id="v-vol-justification">
+                <div class="alert alert-info" style="margin-bottom:16px;">
+                    <span>📝</span>
+                    <div style="font-weight:700;">Reportar Inasistencia Programada:</div>
+                </div>
+                <div class="card">
+                    <div class="field" style="margin-bottom:16px;">
+                        <label
+                            style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">FECHA
+                            DE AUSENCIA</label>
+                        <input type="date" id="volJustFec" class="input">
+                    </div>
+                    <div class="field" style="margin-bottom:16px;">
+                        <label
+                            style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">MOTIVO</label>
+                        <select id="volJustMot" class="input">
+                            <option value="">Selecciona un motivo...</option>
+                            <option value="Enfermedad">Enfermedad</option>
+                            <option value="Estudios / Exámenes">Estudios / Exámenes</option>
+                            <option value="Trabajo">Trabajo</option>
+                            <option value="Asuntos Personales">Asuntos Personales</option>
+                            <option value="Calamidad Doméstica">Calamidad Doméstica</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="field" style="margin-bottom:16px;">
+                        <label
+                            style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">QUIÉN
+                            TE REEMPLAZARÁ (SUSTITUTO)</label>
+                        <select id="volJustSus" class="input">
+                            <option value="">Cargando voluntarios...</option>
+                        </select>
+                        <p style="font-size:10px; color:var(--text-muted); margin-top:6px; font-weight:700;">Selecciona
+                            al voluntario que cubrirá tu grupo en esta fecha.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="volSubmitJustification()">💾 Enviar Justificación</button>
+                </div>
+                <button class="btn btn-ghost" onclick="showVolDashboard()" style="margin-top:10px;">Volver al
+                    panel</button>
+            </div>
+
         </div>
 
         <!-- ── CHATBOT VOLUNTARIOS (SOLO ESTARÁ VISIBLE EN EL DASHBOARD) ── -->
@@ -1647,7 +1689,8 @@
             var hdr = document.createElement('div');
             hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;';
             hdr.innerHTML = '<span class="badge badge-primary">' + (USER.rol || 'voluntaria').toUpperCase() + (USER.pps ? ' · ' + USER.pps : '') + '</span>'
-                + '<div style="display:flex;gap:6px;">'
+                + '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">'
+                + '<button onclick="volShowJustification()" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:6px 10px;font-size:12px;font-weight:800;cursor:pointer;">📝 Justificar</button>'
                 + '<button onclick="volSyncSistema()" style="background:var(--primary-soft);color:var(--primary);border:1px solid var(--primary-soft);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:800;cursor:pointer;">🔄 Sync</button>'
                 + '<button onclick="volLogout()" style="background:none;border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--text-muted);">Salir</button>'
                 + '</div>';
@@ -1986,7 +2029,7 @@
                         var el = document.getElementById('vgc_' + x.g.replace(/ /g, '_'));
                         if (el) { el.style.borderColor = 'var(--border)'; el.style.background = ''; }
                         var chk = document.getElementById('vgc_chk_' + x.g.replace(/ /g, '_'));
-                        if (chk) chk.textContent = '⬜';
+                    if (chk) chk.textContent = '⬜';
                     });
                     // Select this
                     d.style.borderColor = 'var(--primary)';
@@ -2003,30 +2046,74 @@
 
         // Paso 3: guardar cambio
         function volDoGroupChange() {
+            if (!confirm("⚠️ ¿Estás totalmente seguro/a de realizar este cambio de grupo permanente?\n\nEsta acción actualizará la base de datos de manera definitiva.")) return;
+            showLoader("Actualizando participante...");
             var kid = VOL_CHANGE.kidSel;
-            var ng = VOL_CHANGE.newGroupSel;
-            if (!kid || !ng) return alert('Selecciona un grupo nuevo');
-            if (!confirm('⚠️ IMPORTANTE: Este cambio de grupo/horario para ' + kid.n + ' será para TODO EL AÑO y quedará registrado bajo tu nombre de voluntario.\n\nRecuerda que solo se permiten 2 cambios en total por participante a lo largo del año.\n\n¿Deseas aceptar y procesar este cambio definitivo?')) return;
-            showLoader('Registrando cambio...');
-            var gActual = APP_DB.grupos.find(function (x) { return x.g === kid.g; }) || {};
+            var g = VOL_CHANGE.newGroupSel;
             var payload = {
                 tipo: 'cambio',
-                fecha_registro: new Date().toLocaleString('es-EC'),
-                codigo: kid.id,
                 nombre: kid.n,
+                codigo: kid.id,
                 sector: kid.s,
                 grupo_actual: kid.g,
-                link_actual: gActual.link || '',
-                grupo_nuevo: ng.g,
-                link_nuevo: ng.link || '',
-                dia: ng.dia,
-                hora: ng.hora,
-                lugar_nuevo: ng.lugar,
+                link_actual: '', 
+                grupo_nuevo: g.g,
+                link_nuevo: g.link || '',
+                dia: g.dia,
+                hora: g.hora,
+                lugar_nuevo: g.lugar,
                 registrado_por: USER.nombre + ' (voluntario/a)'
             };
             callAPI({ data: JSON.stringify(payload) }, function (resp) {
                 hideLoader();
-                showSuccess('🔄 Cambio Registrado', kid.n + ' fue movido/a a ' + ng.g + ' · ' + ng.dia + ' ' + ng.hora + '.\n\nRegistrado por: ' + USER.nombre);
+                if (resp.ok) {
+                    showSuccess('🔄 Cambio Registrado', kid.n + ' fue movido/a a ' + g.g + ' · ' + g.dia + ' ' + g.hora + '.\n\nRegistrado por: ' + USER.nombre);
+                    // Actualización local
+                    var idx = APP_DB.participantes.findIndex(x => x.id === kid.id);
+                    if (idx > -1) { APP_DB.participantes[idx].g = g.g; }
+                } else {
+                    alert('Error: ' + (resp.error || 'No se pudo procesar'));
+                }
+            });
+        }
+
+        // --- JUSTIFICACIONES VOLUNTARIOS ---
+        function volShowJustification() {
+            var sel = document.getElementById('volJustSus');
+            if (sel) {
+                sel.innerHTML = '<option value="">Selecciona sustituto...</option>'
+                    + (APP_DB.voluntarios || []).sort((a, b) => a.nombre.localeCompare(b.nombre))
+                        .map(v => `<option value="${v.nombre}">${v.nombre} (${v.rol || 'voluntaria'})</option>`).join('');
+            }
+            showView('v-vol-justification', 'Justificar Falta', USER.nombre);
+        }
+
+        function volSubmitJustification() {
+            var fec = document.getElementById('volJustFec').value;
+            var mot = document.getElementById('volJustMot').value;
+            var sus = document.getElementById('volJustSus').value;
+
+            if (!fec || !mot || !sus) return alert("❌ Por favor completa todos los campos (Fecha, Motivo y Sustituto).");
+
+            showLoader("Enviando justificación...");
+            var payload = {
+                tipo: 'justificacion',
+                esVoluntario: true,
+                nombre: USER.nombre,
+                codigo: USER.cedula || 'N/A',
+                fecha_ausencia: fec,
+                motivo: mot,
+                sustituto: sus,
+                grupo: USER.rol || 'Voluntariado'
+            };
+
+            callAPI({ data: JSON.stringify(payload) }, function (r) {
+                hideLoader();
+                if (r.ok) {
+                    showSuccess('✅ Justificación Enviada', 'Tu aviso de inasistencia ha sido registrado correctamente.');
+                } else {
+                    alert("❌ Error: " + (r.error || 'No se pudo enviar'));
+                }
             });
         }
 
@@ -2202,4 +2289,5 @@
         window.onload = syncDB;
     </script>
 </body>
+
 </html>
