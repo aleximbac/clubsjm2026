@@ -1394,10 +1394,31 @@
 
         function famDoChange() {
             const g = window.G_SEL;
-            if (!confirm("⚠️ IMPORTANTE: Este cambio de grupo/horario será para TODO EL AÑO.\n\nRecuerda que solo se permiten 2 cambios en total. ¿Estás seguro/a de continuar y dar aceptar a este cambio?")) return;
+            if (!confirm("⚠️ IMPORTANTE: Este cambio de grupo/horario será para TODO EL AÑO.\n\nRecuerda que solo se permiten cambios limitados por ciclo anual. ¿Estás seguro/a de continuar y dar aceptar a este cambio?")) return;
             showLoader("Solicitando cambio...");
-            const payload = { tipo: 'cambio', codigo: FAM_SEL.id, nombre: FAM_SEL.n, grupo_nuevo: g.g, dia: g.dia, hora: g.hora, lugar_nuevo: g.lugar };
-            callAPI({ data: JSON.stringify(payload) }, () => { hideLoader(); showSuccess("Cambio Solicitado", "Se ha registrado tu solicitud de cambio."); });
+            
+            // Buscar info adicional para completar todas las columnas
+            const gActual = APP_DB.grupos.find(x => x.g === FAM_SEL.g) || {};
+            const payload = { 
+                tipo: 'cambio', 
+                codigo: FAM_SEL.id, 
+                nombre: FAM_SEL.n, 
+                sector: FAM_SEL.s || '',
+                grupo_actual: FAM_SEL.g,
+                link_actual: gActual.link || '',
+                grupo_nuevo: g.g, 
+                link_nuevo: g.link || '',
+                dia: g.dia, 
+                hora: g.hora, 
+                lugar_nuevo: g.lugar,
+                cod_club: g.club || '',
+                registrado_por: 'familia'
+            };
+            callAPI({ data: JSON.stringify(payload) }, (r) => { 
+                hideLoader(); 
+                if(r.ok) showSuccess("Cambio Solicitado", "Se ha registrado tu solicitud de cambio."); 
+                else alert("Error: " + (r.error || "No se pudo procesar"));
+            });
         }
 
         function famJustSearch() {
@@ -2052,19 +2073,24 @@
             showLoader("Actualizando participante...");
             var kid = VOL_CHANGE.kidSel;
             var g = VOL_CHANGE.newGroupSel;
+            
+            // Buscar info adicional
+            var gActual = APP_DB.grupos.find(x => x.g === kid.g) || {};
+            
             var payload = {
                 tipo: 'cambio',
                 nombre: kid.n,
                 codigo: kid.id,
                 sector: kid.s,
                 grupo_actual: kid.g,
-                link_actual: '', 
+                link_actual: gActual.link || '', 
                 grupo_nuevo: g.g,
                 link_nuevo: g.link || '',
                 dia: g.dia,
                 hora: g.hora,
                 lugar_nuevo: g.lugar,
-                registrado_por: USER.nombre + ' (voluntario/a)'
+                cod_club: g.club || '',
+                registrado_por: 'voluntario: ' + USER.nombre
             };
             callAPI({ data: JSON.stringify(payload) }, function (resp) {
                 hideLoader();
