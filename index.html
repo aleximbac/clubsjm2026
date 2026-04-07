@@ -633,6 +633,10 @@
                     </select>
                 </div>
                 <div class="input-group">
+                    <label class="label">Representante Legal (Nombre y Apellido)</label>
+                    <input type="text" id="contRepInp" class="input" placeholder="Ej: Juan Choez">
+                </div>
+                <div class="input-group">
                     <label class="label">Número de WhatsApp (10 dígitos)</label>
                     <input type="tel" id="contTelInp" class="input" placeholder="Ej: 0987654321" maxlength="10">
                 </div>
@@ -1573,7 +1577,13 @@
             };
             callAPI({ data: JSON.stringify(payload) }, () => {
                 hideLoader();
-                showSuccess("Actualizado Exitosamente", "El formato para sincronización de contactos ha sido generado y almacenado seguro.");
+                // Sincronización Local: "Pintar" los datos nuevos en la base local para que se vean en búsquedas futuras
+                (APP_DB.participantes || []).forEach(p => {
+                    if (String(p.f).trim() === String(FAM_SEL.f).trim()) {
+                        p.t = t; // Actualizar el celular en la base local
+                    }
+                });
+                showSuccess("Actualizado Exitosamente", "El formato para sincronización de contactos ha sido generado y los datos de la familia se han actualizado en tiempo real.");
             });
         }
 
