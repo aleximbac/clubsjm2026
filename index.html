@@ -2305,6 +2305,12 @@
         function startAttendance(g) {
             ATT_STATE = { grupo: g, presentes: {}, voluntariosPresentes: {} };
             
+            // Limpiar buscador para evitar persistencia rara
+            var sInp = document.getElementById('attSearchInp');
+            if (sInp) sInp.value = '';
+            var sRes = document.getElementById('attCrossResults');
+            if (sRes) { sRes.innerHTML = ''; sRes.style.display = 'none'; }
+
             // Filtro inicial de niños
             var ninos = APP_DB.participantes
                 .filter(function (p) { return p.g === g; })
