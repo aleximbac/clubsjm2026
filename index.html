@@ -1209,6 +1209,9 @@
                 var btn = document.getElementById('backBtn');
                 btn.style.display = e.state.showBack ? 'flex' : 'none';
                 
+                // Asegurar que regresamos al tope de la pantalla (muy importante para barras fijas)
+                window.scrollTo(0, 0);
+                
                 // --- HOOKS DE RE-INICIALIZACIÓN ---
                 // Si regresamos a la lista de cambio de horario, refrescarla
                 if (e.state.id === 'v-vol-change-list') {
@@ -2557,18 +2560,28 @@
         // Paso 1: mostrar lista de niños del grupo
         function volStartGroupChange(gNom) {
             VOL_CHANGE = { grupo: gNom, kidSel: null, newGroupSel: null };
-            document.getElementById('volChangeSearchInp').value = '';
+            var inp = document.getElementById('volChangeSearchInp');
+            if (inp) inp.value = '';
+            var resCont = document.getElementById('volChangeChildList');
+            if (resCont) resCont.innerHTML = ''; // Limpieza previa
+            
             volRenderChildList(APP_DB.participantes.filter(function (p) { return p.g === gNom; }));
             showView('v-vol-change-list', 'Cambiar horario apadrinados', gNom, true, showVolDashboard);
         }
 
         function volFilterChildren() {
             var inp = document.getElementById('volChangeSearchInp');
-            if (!inp) return;
+            var resCont = document.getElementById('volChangeChildList');
+            if (!inp || !resCont) return;
+            
             var q = norm(inp.value);
-            var base = APP_DB.participantes.filter(function (p) { return p.g === VOL_CHANGE.grupo; });
-            // Filtrar desde 1 carácter para que el usuario sienta que "funciona" al instante
+            // Asegurar que siempre tenemos el grupo actual del estado global
+            var gNom = VOL_CHANGE.grupo;
+            if (!gNom) return;
+
+            var base = APP_DB.participantes.filter(function (p) { return p.g === gNom; });
             var res = q.length > 0 ? base.filter(function (p) { return norm(p.n).includes(q); }) : base;
+            
             volRenderChildList(res);
         }
 
