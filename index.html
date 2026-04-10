@@ -397,6 +397,8 @@
             Sincronizando...</p>
     </div>
 
+    <div id="toastContainer" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+
     <div class="container" id="mainCont">
 
         <!-- ── PORTAL DE ENTRADA ── -->
@@ -453,28 +455,31 @@
                         <div style="font-size:30px; margin-bottom:10px;">📝</div>
                         <div style="font-size:13px; font-weight:900;">Justificar</div>
                     </div>
-                    <div class="card" style="text-align:center; padding:15px;" onclick="famShowMingas()">
-                        <div style="font-size:30px; margin-bottom:10px;">🧹</div>
-                        <div style="font-size:13px; font-weight:900;">Mingas</div>
+                    <div class="card" style="text-align:center; padding:15px;" onclick="famShowSearch('update_profile')">
+                        <div style="font-size:30px; margin-bottom:10px;">📸</div>
+                        <div style="font-size:13px; font-weight:900;">Mi Perfil IA</div>
                     </div>
                 </div>
 
-                <button class="btn btn-outline" style="margin-top:10px;" onclick="famShowSearch('contact')">
-                    <span>📱</span> Actualizar mi Teléfono
-                </button>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn btn-outline" style="flex:1;" onclick="famShowSearch('contact')">
+                        <span>📱</span> Teléfono
+                    </button>
+                    <button class="btn btn-outline" style="flex:1; border-color:#d946ef; color:#d946ef;" onclick="famShowMingas()">
+                        <span>🧹</span> Mingas
+                    </button>
+                </div>
             </div>
 
             <!-- FAM-SEARCH (Universal) -->
             <div class="view" id="v-fam-search">
-                <div class="input-group">
-                    <label class="label" id="searchInpLabel">Nombre del apadrinado/a</label>
+                <div class="input-group" style="position:sticky; top:0; background:rgba(255,255,255,0.95); z-index:10; padding:15px; border-bottom:1px solid var(--border); backdrop-filter:blur(10px); margin:-15px -15px 15px -15px;">
+                    <label class="label" id="searchInpLabel" style="margin-bottom:8px;">Nombre del apadrinado/a</label>
                     <div style="display:flex; gap:10px;">
-                        <input type="text" id="famSearchInp" class="input" placeholder="Ej: Juan Perez" style="flex:1">
-                        <button class="btn btn-primary" style="width:auto; padding:0 20px;"
-                            id="btnFamSearch">🔍</button>
+                        <input type="text" id="famSearchInp" class="input" placeholder="Escribe al menos 2 letras..." style="flex:1; box-shadow:0 4px 10px rgba(0,0,0,0.05);" oninput="famPerformSearch()">
                     </div>
                 </div>
-                <div id="famSearchRes" style="display:grid; gap:12px;"></div>
+                <div id="famSearchRes" style="display:grid; gap:10px; padding-bottom:20px;"></div>
             </div>
 
             <!-- FAM-INFO -->
@@ -524,6 +529,9 @@
                         style="background:#25d366; box-shadow:0 4px 15px rgba(37,211,102,0.3); margin-top:20px;">
                         <span>📱</span> Unirse al grupo de WhatsApp
                     </a>
+                    <button id="famInfoCopyBtn" class="btn btn-outline" style="margin-top:10px;">
+                        <span>📋</span> Copiar Link al Portapapeles
+                    </button>
                 </div>
             </div>
 
@@ -581,7 +589,45 @@
                 <button class="btn btn-primary" onclick="famDoJustify()">Enviar Justificación</button>
             </div>
 
-            <!-- FAM-MINGAS -->
+            <!-- FAM-UPDATE-PROFILE (Edad y Foto IA) -->
+            <div class="view" id="v-fam-update-profile">
+                <div class="card">
+                    <div style="font-weight:900; margin-bottom:15px;">Perfil de:</div>
+                    <div class="badge badge-primary" id="updNameBadge">---</div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <span>🎂</span>
+                    <div style="font-weight:700;">Actualización de Cumpleaños</div>
+                </div>
+                <div class="input-group">
+                    <label class="label">Nueva fecha de nacimiento</label>
+                    <input type="date" id="updDateInp" class="input">
+                </div>
+                <button class="btn btn-outline" style="border-width:2px;" onclick="famDoUpdateAge()">
+                    Cambiar Edad y Reevaluar Grupo
+                </button>
+
+                <hr style="border:none; border-top:1px dashed var(--border); margin:25px 0;">
+
+                <div class="alert alert-info" style="background:#f0fdf4; color:#166534; border-color:#bbf7d0;">
+                    <span>🤖</span>
+                    <div style="font-weight:700;">Validación de Foto por IA (Gemini)</div>
+                </div>
+                <div class="input-group">
+                    <label class="label">Sube una foto clara y centrada</label>
+                    <input type="file" id="updPhotoInp" accept="image/*" class="input" style="padding:10px; font-size:14px;" onchange="famPreviewPhoto(this)">
+                </div>
+                
+                <!-- Preview area -->
+                <div id="photoPreviewArea" style="display:none; text-align:center; margin-bottom:15px;">
+                    <img id="photoPreviewImg" src="" style="width:120px; height:160px; object-fit:cover; border-radius:12px; border:2px solid var(--primary); box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+                </div>
+
+                <button class="btn btn-primary" style="background:var(--success);" onclick="famProcessPhotoAI()" id="btnUploadPhotoAI">
+                    Validar Foto con IA ✨
+                </button>
+            </div>            <!-- FAM-MINGAS -->
             <div class="view" id="v-fam-mingas">
                 <div id="mingaStatusCont"></div>
                 <div class="card" id="mingaHero"
@@ -751,13 +797,11 @@
                     </div>
                     <div id="attVolList" style="display:grid; gap:8px;"></div>
                 </div>
-                <!-- Buscador de participantes -->
-                <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <!-- Buscador de participantes (Sticky) -->
+                <div style="display:flex;gap:8px;padding:12px 0;margin-bottom:12px;background:rgba(255,255,255,0.95);position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);">
                     <input type="text" id="attSearchInp" class="input"
-                        placeholder="🔍 Buscar participante por nombre..." style="flex:1;"
+                        placeholder="🔍 Buscar participante por nombre..." style="flex:1; box-shadow:0 4px 10px rgba(0,0,0,0.05);"
                         oninput="attSearch(this.value)">
-                    <button onclick="attSearch(document.getElementById('attSearchInp').value)" class="btn btn-primary"
-                        style="width:auto;padding:0 14px;font-size:14px;">Ir</button>
                 </div>
                 <!-- Resultados cross-grupo (aparece solo cuando se busca fuera del grupo) -->
                 <div id="attCrossResults" style="display:none;margin-bottom:12px;"></div>
@@ -772,11 +816,9 @@
                     <span>🔄</span>
                     <div style="font-weight:700;">Selecciona el niño/a al que deseas cambiar de grupo:</div>
                 </div>
-                <div id="volChangeSearchWrap" style="display:flex;gap:10px;margin-bottom:16px;">
+                <div id="volChangeSearchWrap" style="display:flex;gap:10px;padding:12px 0;margin-bottom:12px;background:rgba(255,255,255,0.95);position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);">
                     <input type="text" id="volChangeSearchInp" class="input" placeholder="Buscar por nombre..."
-                        style="flex:1;">
-                    <button class="btn btn-primary" style="width:auto;padding:0 18px;"
-                        onclick="volFilterChildren()">🔍</button>
+                        style="flex:1; box-shadow:0 4px 10px rgba(0,0,0,0.05);" oninput="volFilterChildren()">
                 </div>
                 <div id="volChangeChildList" style="display:grid;gap:10px;"></div>
             </div>
@@ -823,11 +865,10 @@
                         <label
                             style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">QUIÉN
                             TE REEMPLAZARÁ (SUSTITUTO)</label>
-                        <select id="volJustSus" class="input">
-                            <option value="">Cargando voluntarios...</option>
-                        </select>
+                        <div id="volJustSusGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:10px;"></div>
+                        <input type="hidden" id="volJustSus" value="">
                         <p style="font-size:10px; color:var(--text-muted); margin-top:6px; font-weight:700;">Selecciona
-                            al voluntario que cubrirá tu grupo en esta fecha.</p>
+                            al compañero que cubrirá tu grupo.</p>
                     </div>
                     <button class="btn btn-primary" onclick="volSubmitJustification()">💾 Enviar Justificación</button>
                 </div>
@@ -990,10 +1031,14 @@
                 btn.style.display = e.state.showBack ? 'flex' : 'none';
             } else {
                 // Fallback al inicio
-                document.getElementById('v-portal').classList.add('active');
-                document.getElementById('backBtn').style.display = 'none';
-                var hT = document.getElementById('hTitle');
-                if (hT) hT.textContent = "Mi Club 2026";
+                if (USER && USER.rol) {
+                    showVolDashboard(); 
+                } else {
+                    document.getElementById('v-portal').classList.add('active');
+                    document.getElementById('backBtn').style.display = 'none';
+                    var hT = document.getElementById('hTitle');
+                    if (hT) hT.textContent = "Mi Club 2026";
+                }
             }
         });
 
@@ -1326,24 +1371,112 @@
             let label = "Nombre del apadrinado/a";
             if (type === 'justify') label = "Buscar para justificar";
             if (type === 'contact') label = "Representante a actualizar";
+            if (type === 'update_profile') label = "Buscar para perfil IA";
+            if (type === 'vol_query') label = "Buscar niño en todo el club";
 
             document.getElementById('searchInpLabel').textContent = label;
-            const btn = document.getElementById('btnFamSearch');
             const inp = document.getElementById('famSearchInp');
             inp.value = ""; document.getElementById('famSearchRes').innerHTML = "";
 
-            if (type === 'justify') btn.onclick = famJustSearch;
-            else if (type === 'contact') btn.onclick = famContSearch;
-            else btn.onclick = famDoSearch;
+            if (type === 'justify') inp.oninput = famJustSearch;
+            else if (type === 'contact') inp.oninput = famContSearch;
+            else if (type === 'update_profile') inp.oninput = famUpdProfileSearch;
+            else if (type === 'vol_query') inp.oninput = () => famDoSearch('vol_query');
+            else inp.oninput = () => famDoSearch('main');
 
-            showView('v-fam-search', 'Búsqueda', 'Ingresa al menos 2 letras', true, initFamilias);
+            const backFunc = (type === 'vol_query') ? showVolDashboard : initFamilias;
+            showView('v-fam-search', 'Búsqueda', 'A tiempo real', true, backFunc);
+        }
+
+        // --- ACTUALIZACIÓN DE PERFIL E IA ---
+        function famUpdProfileSearch() {
+            const q = norm(document.getElementById('famSearchInp').value);
+            const resCont = document.getElementById('famSearchRes');
+            const found = APP_DB.participantes.filter(p => norm(p.n).includes(q)).slice(0, 8);
+            resCont.innerHTML = '';
+            found.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card'; card.style.cursor = 'pointer';
+                card.innerHTML = `<div style="font-weight:900;">${p.n}</div><div style="font-size:11px; color:var(--text-muted);">${p.e} años · Grupo: ${p.g}</div>`;
+                card.onclick = () => { 
+                    FAM_SEL = p; 
+                    document.getElementById('updNameBadge').textContent = p.n; 
+                    document.getElementById('photoPreviewArea').style.display = 'none';
+                    document.getElementById('updPhotoInp').value = '';
+                    showView('v-fam-update-profile', 'Perfil IA', p.n); 
+                };
+                resCont.appendChild(card);
+            });
+        }
+        
+        var CURRENT_B64_FOTO = "";
+        function famPreviewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const r = new FileReader();
+                r.onload = function(e) {
+                    CURRENT_B64_FOTO = e.target.result;
+                    document.getElementById('photoPreviewArea').style.display = 'block';
+                    document.getElementById('photoPreviewImg').src = CURRENT_B64_FOTO;
+                };
+                r.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        function famProcessPhotoAI() {
+            if(!CURRENT_B64_FOTO) return alert("Sube una foto primero");
+            showLoader("La Inteligencia Artificial está analizando tu foto...");
+            
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    tipo: "upload_foto",
+                    codigo: FAM_SEL.id,
+                    nombre: FAM_SEL.n,
+                    base64: CURRENT_B64_FOTO
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                hideLoader();
+                if(res.ok) {
+                    showCustomMessage("¡Foto Aprobada! 📸", "Nuestra IA ha validado la foto y cumple con los estándares.", "var(--success)");
+                } else {
+                    showCustomMessage("Foto Rechazada ❌", "Motivo de la IA: " + (res.razon || "Intenta tomar una más clara."), "var(--danger)");
+                }
+            })
+            .catch(err => {
+                hideLoader();
+                alert("Error de conexión al cargar foto: " + err);
+            });
+        }
+        
+        function famDoUpdateAge() {
+            const num = document.getElementById('updDateInp').value;
+            if(!num) return alert("Ingresa la fecha.");
+            
+            const birthTime = new Date(num).getTime();
+            const now = new Date().getTime();
+            let predictedAge = Math.floor((now - birthTime) / (365.25 * 24 * 60 * 60 * 1000));
+            if(predictedAge < 0) predictedAge = 0;
+            
+            if(!confirm(`La nueva edad calculada será de ${predictedAge} años.\n\nEl sistema re-evaluará tu caso y te asignará un nuevo grupo si tu edad ya no coincide con el actual. ¿Aceptar?`)) return;
+            
+            showLoader("Actualizando edad y evaluando perfil...");
+            const payload = { tipo: "update_age", codigo: FAM_SEL.id, edad: predictedAge };
+            callAPI({ data: JSON.stringify(payload) }, r => {
+                hideLoader();
+                if(r.ok) {
+                    FAM_SEL.e = predictedAge;
+                    showCustomMessage("Edad Actualizada 🎉", `Se actualizó la edad a ${predictedAge} años. Revisa los grupos disponibles.`, "var(--success)");
+                } else alert("Error al actualizar la edad: " + (r.error || ""));
+            });
         }
 
         var FAM_SEL = null;
-        function famDoSearch() {
+        function famDoSearch(type) {
             const q = norm(document.getElementById('famSearchInp').value);
             const resCont = document.getElementById('famSearchRes');
-            if (q.length < 2) return alert("Escribe al menos 2 letras");
+            if (q.length < 2) { resCont.innerHTML = ''; return; }
 
             const found = APP_DB.participantes.filter(p => norm(p.n).includes(q)).slice(0, 8);
             resCont.innerHTML = '';
@@ -1351,12 +1484,12 @@
                 const card = document.createElement('div');
                 card.className = 'card'; card.style.cursor = 'pointer';
                 card.innerHTML = `<div style="font-weight:900;">${p.n}</div><div style="font-size:11px; font-weight:700; color:var(--text-muted);">${p.g} · Sector ${p.s}</div>`;
-                card.onclick = () => famShowInfo(p);
+                card.onclick = () => famShowInfo(p, type);
                 resCont.appendChild(card);
             });
         }
 
-        function famShowInfo(p) {
+        function famShowInfo(p, backType) {
             FAM_SEL = p;
             const g = APP_DB.grupos.find(x => x.g === p.g) || {};
             document.getElementById('famInfoAv').textContent = p.n.charAt(0);
@@ -1366,7 +1499,28 @@
             document.getElementById('famInfoTime').textContent = `${g.dia || 'Sin dia'} ${g.hora || ''}`;
             document.getElementById('famInfoPlace').textContent = g.lugar || 'Sin lugar';
             document.getElementById('famInfoWA').href = g.link || '#';
-            showView('v-fam-info', p.n, 'Detalles de Horario', true, () => famShowSearch('main'));
+            
+            const copyBtn = document.getElementById('famInfoCopyBtn');
+            if (copyBtn) {
+                if (g.link) {
+                    copyBtn.style.display = 'block';
+                    copyBtn.onclick = (e) => copyText(e, g.link);
+                } else {
+                    copyBtn.style.display = 'none';
+                }
+            }
+            
+            showView('v-fam-info', p.n, 'Detalles de Horario', true, () => famShowSearch(backType || 'main'));
+        }
+
+        function copyText(e, txt) {
+            if (e) { e.preventDefault(); e.stopImmediatePropagation(); }
+            if (!txt) return alert("No hay ningún enlace asignado a este grupo.");
+            navigator.clipboard.writeText(txt).then(() => {
+                showCustomMessage("Copiado ✔️", "El enlace protegido de WhatsApp ha sido copiado a tu portapapeles. Pégalo donde lo necesites.", "var(--success)");
+            }).catch(() => {
+                alert("Tu dispositivo no soporta el copiado automático. Enlace: " + txt);
+            });
         }
 
         function famVerifyChange() {
@@ -1420,8 +1574,9 @@
             };
             callAPI({ data: JSON.stringify(payload) }, (r) => { 
                 hideLoader(); 
-                if(r.ok) showSuccess("Cambio Solicitado", "Se ha registrado tu solicitud de cambio."); 
-                else alert("Error: " + (r.error || "No se pudo procesar"));
+                if(r.ok) {
+                    showCustomMessage("¡ATENCIÓN ROJA!", `El nuevo horario de ${FAM_SEL.n} ES AHORA DEFINITIVO: ${g.dia} ${g.hora}`, "var(--danger)");
+                } else alert("Error: " + (r.error || "No se pudo procesar"));
             });
         }
 
@@ -1445,7 +1600,12 @@
             if (!f || !m) return alert("Completa los campos");
             showLoader("Enviando...");
             const payload = { tipo: 'justificacion', nombre: FAM_SEL.n, codigo: FAM_SEL.id, fecha_ausencia: f, motivo: m, grupo: FAM_SEL.g, sector: FAM_SEL.s };
-            callAPI({ data: JSON.stringify(payload) }, () => { hideLoader(); showSuccess("Justificación Recibida", "Tu aviso de falta ha sido registrado."); });
+            callAPI({ data: JSON.stringify(payload) }, () => { 
+                hideLoader(); 
+                document.getElementById('justDateInp').value = "";
+                document.getElementById('justMotivoInp').value = "";
+                showCustomMessage("Justificación Enviada ✔️", `Hiciste justificación de ${FAM_SEL.n} y fue enviada con éxito.`, "var(--success)"); 
+            });
         }
 
         function famShowMingas() {
@@ -1723,7 +1883,8 @@
                 + '<span class="badge badge-primary" style="font-size:10px; padding:4px 10px;">' + (USER.rol || 'voluntaria').toUpperCase() + (USER.pps ? ' · ' + USER.pps : '') + '</span>'
                 + '<button onclick="volLogout()" style="background:#f1f5f9; border:1px solid var(--border); border-radius:12px; padding:5px 12px; font-size:11px; font-weight:700; cursor:pointer; color:var(--text-muted);">Salir</button>'
                 + '</div>'
-                + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">'
+                + '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">'
+                + '<button onclick="famShowSearch(\'vol_query\')" style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe; border-radius:12px; padding:10px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">🔍 Horarios</button>'
                 + '<button onclick="volShowJustification()" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; border-radius:12px; padding:10px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">📝 Justificar</button>'
                 + '<button onclick="volSyncSistema()" style="background:var(--primary-soft); color:var(--primary); border:1px solid var(--primary-soft); border-radius:12px; padding:10px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,0.1);">🔄 Sync</button>'
                 + '</div>';
@@ -1757,6 +1918,39 @@
             if (gruposUser.length === 0) {
                 list.innerHTML += '<div class="alert alert-warn"><span>⚠️</span><div>No tienes grupos asignados. Contacta al coordinador.</div></div>';
             }
+
+            // ── Renderizar Top 10 Fotos de Comunidad ──
+            var comDiv = document.createElement('div');
+            comDiv.style.cssText = 'margin-bottom:20px;';
+            comDiv.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">'
+                + '<div style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase;">📸 Muro del Club</div>'
+                + '<button onclick="document.getElementById(\'comFotoInp\').click()" style="background:#10b981; color:white; border:none; border-radius:12px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer; box-shadow:0 2px 5px rgba(16,185,129,0.3);">+ Subir Foto</button>'
+                + '</div>'
+                + '<input type="file" id="comFotoInp" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">'
+                + '<div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px; min-height:80px;" id="comFotoFeed"></div>';
+            list.appendChild(comDiv);
+
+            setTimeout(() => {
+                var feed = comDiv.querySelector('#comFotoFeed');
+                if (APP_DB.comunidad_fotos && APP_DB.comunidad_fotos.length > 0) {
+                    APP_DB.comunidad_fotos.slice().reverse().forEach(function(cf) {
+                        var cUrl = cf.url ? cf.url.replace('/file/d/', '/uc?export=view&id=').replace('/view?usp=drivesdk', '') : '';
+                        var card = document.createElement('div');
+                        card.style.cssText = 'min-width:120px; width:120px; height:120px; border-radius:12px; overflow:hidden; border:2px solid var(--border); position:relative; background: #e2e8f0; flex-shrink:0;';
+                        card.innerHTML = '<img src="' + cUrl + '" style="width:100%; height:100%; object-fit:cover;">'
+                        + '<div style="position:absolute; bottom:0; left:0; width:100%; padding:8px; display:flex; flex-direction:column; background:rgba(255,255,255,0.85); backdrop-filter:blur(3px);">'
+                        + '<span style="color:var(--text); font-size:10px; font-weight:900;">' + String(cf.vol).split(' ')[0] + '</span>'
+                        + '<span style="color:var(--text-muted); font-size:8px; font-weight:700;">' + String(cf.grupo) + '</span>'
+                        + '</div>';
+                        feed.appendChild(card);
+                    });
+                } else {
+                    feed.innerHTML = '<div style="flex:1; background:#f8fafc; padding:15px; border-radius:12px; border:2px dashed var(--border); text-align:center; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;">'
+                    + '<span style="font-size:24px;">📸</span>'
+                    + '<span style="font-size:11px; font-weight:800; color:var(--text-muted);">Aún no hay fotos esta semana. ¡Sé el primero/a!</span>'
+                    + '</div>';
+                }
+            }, 0);
 
             gruposUser.forEach(function (gNom) {
                 var gInfo = APP_DB.grupos.find(function (x) { return x.g === gNom; }) || {};
@@ -1967,9 +2161,7 @@
             };
             callAPI({ data: JSON.stringify(payload) }, function () {
                 hideLoader();
-                showSuccess('✅ Asistencia Guardada',
-                    count + ' de ' + total + ' niños presentes.\n'
-                    + '🧤 Voluntarios: ' + voluntariosPresentes.join(', '));
+                triggerGamification('¡Asistencia Guardada! Eres una estrella.');
             });
         }
 
@@ -2055,6 +2247,7 @@
                     + '<div style="font-size:12px;color:var(--text-muted);font-weight:700;">📅 ' + g.dia + ' · ' + g.hora + '</div>'
                     + '<div style="font-size:12px;color:var(--text-muted);font-weight:700;">📍 ' + g.lugar + '</div>'
                     + '<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-top:4px;">👤 Edades: ' + (g.edades && g.edades.length ? g.edades.join(', ') : 'Todas') + '</div>'
+                    + (g.link ? '<button onclick="copyText(event, \'' + g.link + '\')" style="margin-top:8px; padding:4px 8px; font-size:11px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; border-radius:6px; font-weight:800; cursor:pointer;" class="btn-copy">📋 Copiar Enlace WA</button>' : '')
                     + '</div><span id="vgc_chk_' + g.g.replace(/ /g, '_') + '" style="font-size:22px;">⬜</span></div>';
                 d.onclick = function () {
                     // Deselect all
@@ -2117,11 +2310,25 @@
 
         // --- JUSTIFICACIONES VOLUNTARIOS ---
         function volShowJustification() {
-            var sel = document.getElementById('volJustSus');
-            if (sel) {
-                sel.innerHTML = '<option value="">Selecciona sustituto...</option>'
-                    + (APP_DB.voluntarios || []).sort((a, b) => a.nombre.localeCompare(b.nombre))
-                        .map(v => `<option value="${v.nombre}">${v.nombre} (${v.rol || 'voluntaria'})</option>`).join('');
+            var grid = document.getElementById('volJustSusGrid');
+            if (grid) {
+                grid.innerHTML = '';
+                document.getElementById('volJustSus').value = '';
+                var vols = (APP_DB.voluntarios || []).sort((a,b) => a.nombre.localeCompare(b.nombre));
+                vols.forEach(v => {
+                    var c = document.createElement('div');
+                    c.className = 'card';
+                    c.style.cssText = 'cursor:pointer; display:flex; flex-direction:column; align-items:center; text-align:center; padding:10px; border:2px solid var(--border); transition:all 0.2s;';
+                    c.innerHTML = '<div style="width:40px; height:40px; border-radius:50%; background:var(--primary-soft); color:var(--primary); font-weight:900; display:flex; align-items:center; justify-content:center; margin-bottom:8px; font-size:18px;">' + v.nombre.charAt(0) + '</div>'
+                        + '<div style="font-size:11px; font-weight:800;">' + v.nombre.split(' ')[0] + '</div>';
+                    c.onclick = () => {
+                        Array.from(grid.children).forEach(el => { el.style.borderColor = 'var(--border)'; el.style.background = 'white'; });
+                        c.style.borderColor = 'var(--primary)';
+                        c.style.background = '#e0eafe';
+                        document.getElementById('volJustSus').value = v.nombre;
+                    };
+                    grid.appendChild(c);
+                });
             }
             showView('v-vol-justification', 'Justificar Falta', USER.nombre);
         }
@@ -2148,11 +2355,52 @@
             callAPI({ data: JSON.stringify(payload) }, function (r) {
                 hideLoader();
                 if (r.ok) {
-                    showSuccess('✅ Justificación Enviada', 'Tu aviso de inasistencia ha sido registrado correctamente.');
+                    triggerGamification('¡Falta Justificada, gracias por tu nivel de compromiso!');
+                    document.getElementById('volJustFec').value = '';
+                    document.getElementById('volJustMot').value = '';
+                    document.getElementById('volJustSus').value = '';
+                    showVolDashboard();
                 } else {
-                    alert("❌ Error: " + (r.error || 'No se pudo enviar'));
+                    showToast("Error: " + (r.error || 'No se pudo enviar'), true);
                 }
             });
+        }
+
+        // --- SUBIDA DE FOTO A LA COMUNIDAD ---
+        function uploadComunidadFoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            showLoader("Subiendo foto al muro del club...");
+            r.onload = function(e) {
+                const b64 = e.target.result;
+                const volG = USER.grupos && USER.grupos.length > 0 ? USER.grupos[0] : 'General';
+                fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        tipo: "upload_comunidad_foto",
+                        voluntario: USER.nombre,
+                        grupo: volG,
+                        base64: b64
+                    })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    hideLoader();
+                    if(res.ok) {
+                        triggerGamification("¡Genial! Tu foto fue compartida al club.");
+                        setTimeout(() => volSyncSistema(), 1500);
+                    } else {
+                        showToast("Error subiendo foto: " + res.error, true);
+                    }
+                })
+                .catch(err => {
+                    hideLoader();
+                    showToast("Error de red: " + err, true);
+                });
+            };
+            r.readAsDataURL(file);
+            document.getElementById('comFotoInp').value = '';
         }
 
         // --- MÓDULO ADMIN ---
@@ -2319,12 +2567,143 @@
         // --- SUCCESS SCREEN ---
         function showSuccess(title, msg) {
             document.getElementById('successTitle').textContent = title || '¡Completado!';
+            document.getElementById('successTitle').style.color = 'var(--text)';
             document.getElementById('successMsg').textContent = msg || 'Tu solicitud fue procesada.';
+            document.getElementById('successMsg').style.color = 'var(--text)';
             showView('v-success', title || '¡Listo!', 'Operación exitosa', false);
         }
 
+        // --- CUSTOM SCREEN ---
+        function showCustomMessage(title, msg, color) {
+            document.getElementById('successTitle').textContent = title || '¡Completado!';
+            document.getElementById('successTitle').style.color = color || 'var(--text)';
+            document.getElementById('successMsg').textContent = msg || 'Tu solicitud fue procesada.';
+            document.getElementById('successMsg').style.color = color === "var(--danger)" ? "var(--danger)" : "var(--text)";
+            document.getElementById('successMsg').style.fontWeight = "900";
+            showView('v-success', title || '¡Listo!', 'Aviso', false);
+        }
+
+        // --- GAMIFICATION & TOASTS ---
+        function showToast(msg, isError = false) {
+            var tc = document.getElementById('toastContainer');
+            if (tc) {
+                var t = document.createElement('div');
+                t.style.cssText = 'background:' + (isError?'#ef4444':'#10b981') + '; color:white; padding:12px 20px; border-radius:12px; font-weight:800; font-size:13px; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform:translateY(-20px); opacity:0; transition:all 0.3s; display:flex; align-items:center; gap:8px;';
+                t.innerHTML = '<span>' + (isError?'❌':'⭐') + '</span> <div>' + msg + '</div>';
+                tc.appendChild(t);
+                setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; }, 10);
+                if (navigator.vibrate) navigator.vibrate(isError ? [50, 100, 50] : [200]);
+                setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; setTimeout(() => t.remove(), 300); }, 3000);
+            }
+        }
+
+        function triggerGamification(msg) {
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+            showToast(msg);
+            var conf = document.createElement('div');
+            conf.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9998; background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(255,255,255,0) 70%); transition:opacity 1s;';
+            document.body.appendChild(conf);
+            setTimeout(() => { conf.style.opacity = '0'; setTimeout(()=>conf.remove(), 1000); }, 2000);
+        }
+
+        // --- FUNCIONALIDAD BURBUJA ARRASTRABLE ---
+        function makeDraggable(el) {
+            let startX = 0, startY = 0, initialX = 0, initialY = 0;
+            let active = false;
+            let isDragging = false;
+
+            const savedPos = localStorage.getItem(el.id + '_pos');
+            if (savedPos) {
+                const pos = JSON.parse(savedPos);
+                el.style.left = pos.left;
+                el.style.top = pos.top;
+                el.style.right = 'auto';
+                el.style.bottom = 'auto';
+            }
+
+            el.addEventListener('touchstart', dragStart, {passive: false});
+            el.addEventListener('mousedown', dragStart, false);
+
+            function dragStart(e) {
+                if (e.target.tagName.toLowerCase() === 'button') return;
+                if (e.type === "touchstart") {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                } else {
+                    startX = e.clientX;
+                    startY = e.clientY;
+                }
+                const rect = el.getBoundingClientRect();
+                initialX = rect.left;
+                initialY = rect.top;
+                active = true;
+                isDragging = false;
+                el.style.transition = 'none';
+            }
+
+            document.addEventListener('touchend', dragEnd, false);
+            document.addEventListener('mouseup', dragEnd, false);
+
+            function dragEnd() {
+                if (!active) return;
+                active = false;
+                el.style.transition = 'transform 0.3s';
+                if(isDragging) {
+                    localStorage.setItem(el.id + '_pos', JSON.stringify({
+                        left: el.style.left,
+                        top: el.style.top
+                    }));
+                }
+            }
+
+            document.addEventListener('touchmove', drag, {passive: false});
+            document.addEventListener('mousemove', drag, false);
+
+            function drag(e) {
+                if (active) {
+                    let clientX, clientY;
+                    if (e.type === "touchmove") {
+                        clientX = e.touches[0].clientX;
+                        clientY = e.touches[0].clientY;
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                    }
+                    const deltaX = clientX - startX;
+                    const deltaY = clientY - startY;
+
+                    if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+                        isDragging = true;
+                    }
+
+                    if (isDragging) {
+                        e.preventDefault();
+                        el.style.left = (initialX + deltaX) + "px";
+                        el.style.top = (initialY + deltaY) + "px";
+                        el.style.right = 'auto';
+                        el.style.bottom = 'auto';
+                    }
+                }
+            }
+
+            el.addEventListener('click', function(e) {
+                if (isDragging) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                }
+            }, true);
+        }
+
         function norm(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
-        window.onload = syncDB;
+        
+        window.onload = function() {
+            syncDB();
+            const botFab = document.getElementById('botFab');
+            if (botFab) makeDraggable(botFab);
+            
+            const botFabVol = document.getElementById('botFabVol');
+            if (botFabVol) makeDraggable(botFabVol);
+        };
     </script>
 </body>
 
