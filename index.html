@@ -200,12 +200,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 99999;
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            text-align: center;
         }
 
         #globalLoader.active {
@@ -1478,8 +1479,8 @@
                 card.onclick = () => { 
                     // FILTRO DE EDAD: Solo mostrar grupos donde la edad del niño esté permitida
                     var groups = APP_DB.grupos.filter(function(g) {
-                        return g.edades.indexOf(p.e) !== -1;
-                    }).map(g => g.g).filter(gn => gn !== p.g);
+                        return g.edades.indexOf(p.e) !== -1 && g.g !== p.g;
+                    });
 
                     if(groups.length === 0) return alert("❌ No existen grupos disponibles para la edad de este niño (" + p.e + " años).");
                     
@@ -1492,8 +1493,8 @@
                     selBox.innerHTML = '<div style="font-size:40px; margin-bottom:10px;">🔄</div>'
                         + '<div style="font-weight:900; font-size:20px; color:var(--text); margin-bottom:5px;">Mover a ' + String(p.n).split(' ')[0] + '</div>'
                         + '<div style="font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:20px;">Elige el nuevo grupo al que ingresarás a este participante:</div>'
-                        + '<div style="text-align:left;"><select id="volMoveSel" style="width:100%; padding:15px; border-radius:12px; border:2px solid var(--border); margin-bottom:25px; font-weight:800; font-size:15px; color:var(--primary); outline:none; appearance:none; background:var(--bg) url(\'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" fill=\"%233b82f6\"><path d=\"M12 16.5l-6-6h12l-6 6z\"/></svg>\') no-repeat right 15px center;">'
-                        + groups.map(g => '<option value="'+g+'">'+g+'</option>').join('') + '</select></div>'
+                        + '<div style="text-align:left;"><select id="volMoveSel" style="width:100%; padding:15px; border-radius:12px; border:2px solid var(--border); margin-bottom:25px; font-weight:800; font-size:14px; color:var(--primary); outline:none; appearance:none; background:var(--bg) url(\'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" fill=\"%233b82f6\"><path d=\"M12 16.5l-6-6h12l-6 6z\"/></svg>\') no-repeat right 15px center;">'
+                        + groups.map(g => '<option value="'+g.g+'">'+g.g+' ('+g.dia+' '+g.hora+')</option>').join('') + '</select></div>'
                         + '<div style="display:flex; gap:12px;">'
                         + '<button id="btnCanMove" style="flex:1; background:#f1f5f9; border:none; padding:15px; border-radius:12px; font-weight:800; color:var(--text-muted); cursor:pointer;">Cancelar</button>'
                         + '<button id="btnConfMove" style="flex:1; background:#10b981; border:none; padding:15px; border-radius:12px; font-weight:800; color:white; cursor:pointer; box-shadow:0 4px 15px rgba(16,185,129,0.3);">Confirmar</button>'
@@ -2056,7 +2057,7 @@
                 + '<button onclick="document.getElementById(\'comFotoInp\').click()" style="background:#10b981; color:white; border:none; border-radius:12px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer; box-shadow:0 2px 5px rgba(16,185,129,0.3);">+ Subir Foto</button>'
                 + '</div>'
                 + '<input type="file" id="comFotoInp" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">'
-                + '<div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:15px; height:200px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory;" id="comFotoFeed"></div>';
+                + '<div style="display:flex; gap:12px; overflow-x:auto; padding:5px 20px 20px 20px; height:205px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; scroll-padding:20px; margin-left:-20px; margin-right:-20px;" id="comFotoFeed"></div>';
             list.appendChild(comDiv);
 
             setTimeout(() => {
