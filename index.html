@@ -2304,94 +2304,184 @@
         var ATT_STATE = { grupo: null, presentes: {}, voluntariosPresentes: {} };
         function startAttendance(g) {
             ATT_STATE = { grupo: g, presentes: {}, voluntariosPresentes: {} };
+            
+            // Filtro inicial de niños
             var ninos = APP_DB.participantes
                 .filter(function (p) { return p.g === g; })
                 .sort(function (a, b) { return a.n.localeCompare(b.n); });
 
-            // ── Renderizar voluntarios del grupo ──
-            var volListEl = document.getElementById('attVolList');
-            volListEl.innerHTML = '';
-            // Obtener voluntarios asignados a este grupo (o coordinadores)
+            // ── Renderizar lista de voluntarios del grupo (Pre-selección) ──
             var esCoord = USER && (USER.rol === 'coordinador' || USER.rol === 'admin');
             var volsDelGrupo = (APP_DB.voluntarios || []).filter(function (v) {
                 if (esCoord || v.grupos.indexOf(g) >= 0 || v.grupos.indexOf('TODOS') >= 0) return true;
                 var vPpsList = v.pps ? String(v.pps).split(',').map(function (x) { return x.trim(); }).filter(Boolean) : [];
                 if (vPpsList.indexOf('TODOS') >= 0) return true;
                 var gInfo = APP_DB.grupos.find(function (x) { return x.g === g; }) || {};
-                return vPpsList.some(function (ppsStr) {
-                    var translatedPps = PPS_MAP[ppsStr.toUpperCase()] || ppsStr;
-                    var lPps = translatedPps.toLowerCase();
-                    var lRawPps = ppsStr.toLowerCase();
+                var translatedPps = PPS_MAP[gInfo.lugar ? gInfo.lugar.toUpperCase() : ''] || '';
+                return vPpsList.some(vpps => translatedPps.includes(vpps) || (gInfo.club && gInfo.club.includes(vpps)));
+            });
 
-                    return (gInfo.lugar && gInfo.lugar.toLowerCase().includes(lPps)) ||
-                        (gInfo.club && gInfo.club.toLowerCase().includes(lRawPps)) ||
-                        (gInfo.g && gInfo.g.toLowerCase().includes(lRawPps));
-                });
-            });
-            // Asegurar que el usuario actual esté incluido aunque no esté en la lista
-            var usuarioEnLista = volsDelGrupo.some(function (v) {
-                return v.nombre.toLowerCase() === (USER ? USER.nombre.toLowerCase() : '');
-            });
-            if (USER && !usuarioEnLista) {
-                volsDelGrupo.unshift({ nombre: USER.nombre, rol: USER.rol || 'voluntaria' });
-            }
-            if (volsDelGrupo.length === 0) {
-                volListEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted);font-weight:700;">Sin voluntarios asignados registrados</div>';
-            }
-            // Por defecto, ya no renderizamos la lista de texto, sino que esperamos al modal o mostramos los confirmados
+            // Autoseleccionar al usuario actual
+            if (USER) ATT_STATE.voluntariosPresentes[USER.nombre] = true;
+
+            // Renderizar resumen inicial de voluntarios y la lista de niños
             renderVolSelectionSummary();
+            renderAttendanceList(ninos);
+
+            showView('v-vol-attendance', g, 'Toma de Asistencia', true, showVolDashboard);
+        }
+
+        function renderVolSelectionSummary() {
+            var volListEl = document.getElementById('attVolList');
+            var volCountEl = document.getElementById('attVolCount');
+            if (!volListEl) return;
+            
+            volListEl.innerHTML = '';
+            var presentNames = Object.keys(ATT_STATE.voluntariosPresentes);
+            if (volCountEl) volCountEl.textContent = presentNames.length;
+            
+            if (presentNames.length === 0) {
+                volListEl.innerHTML = '<div style="font-size:11px; color:var(--text-muted); font-weight:700; text-align:center; padding:10px;">⚠️ Nadie seleccionado aún</div>';
+                return;
+            }
+
+            var strip = document.createElement('div');
+            strip.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px; padding:4px 0;';
+            presentNames.forEach(name => {
+                var v = APP_DB.voluntarios.find(x => x.nombre === name) || {nombre: name};
+                var chip = document.createElement('div');
+                chip.style.cssText = 'background:white; border:1.5px solid var(--primary); border-radius:30px; padding:4px 10px 4px 6px; display:flex; align-items:center; gap:8px; font-size:11px; font-weight:800;';
+                
+                var avatarHtml = '';
+                if (v.foto) {
+                    var fileIdmatch = v.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    var pId = fileIdmatch ? fileIdmatch[1] : '';
+                    var vUrl = pId ? 'https://drive.google.com/thumbnail?id=' + pId + '&sz=200' : v.foto;
+                    avatarHtml = '<img src="' + vUrl + '" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">';
+                } else {
+                    avatarHtml = '<div style="width:20px; height:20px; border-radius:50%; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:10px;">' + name.charAt(0) + '</div>';
+                }
+
+                chip.innerHTML = avatarHtml + '<span>' + name.split(' ')[0] + '</span>';
+                strip.appendChild(chip);
+            });
+            volListEl.appendChild(strip);
+        }
+
+        function renderAttendanceList(ninos) {
+            var list = document.getElementById('attList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            // Conteo de niños con cambio reciente en este grupo
+            var conCambio = ninos.filter(function (p) { return p.cambio; }).length;
+            if (conCambio > 0) {
+                var infoDiv = document.createElement('div');
+                infoDiv.className = 'alert alert-info';
+                infoDiv.style.marginBottom = '12px';
+                infoDiv.innerHTML = '<span>🔄</span><div style="font-weight:700;">'
+                    + conCambio + ' niño(s) en este grupo por cambio de horario</div>';
+                list.appendChild(infoDiv);
+            }
+
+            if (ninos.length === 0) {
+                list.innerHTML = '<div class="alert alert-warn"><span>⚠️</span><div>No hay niños registrados en este grupo.</div></div>';
+                return;
+            }
+
+            ninos.forEach(function (p) {
+                var c = document.createElement('div');
+                c.className = 'card att-item';
+                c.setAttribute('data-name', norm(p.n));
+                c.style.cssText = 'display:flex;align-items:center;gap:15px;padding:14px 16px;cursor:pointer;';
+
+                // Badge de cambio si aplica
+                var cambioBadge = '';
+                if (p.cambio) {
+                    cambioBadge = '<div style="font-size:10px;font-weight:800;color:#d97706;background:#fef3c7;border-radius:6px;padding:2px 6px;margin-top:3px;display:inline-block;">'
+                        + '🔄 Cambió de ' + p.cambio.desde + '</div>';
+                }
+
+                // Avatar con Foto
+                var avatarHtml = '';
+                if (p.foto) {
+                    var fileIdmatch = p.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    var parsedId = fileIdmatch ? fileIdmatch[1] : '';
+                    var pUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=200' : p.foto;
+                    avatarHtml = '<img src="' + pUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'40\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>' + p.n.charAt(0).toUpperCase() + '</text></svg>\';" style="width:50px; height:50px; border-radius:12px; object-fit:cover; flex-shrink:0;">';
+                } else {
+                    avatarHtml = '<div style="width:50px; height:50px; border-radius:12px; background:var(--primary-soft); color:var(--primary); font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px;">' + p.n.charAt(0).toUpperCase() + '</div>';
+                }
+
+                c.innerHTML = avatarHtml
+                    + '<div style="flex:1;">'
+                    + '<div style="font-weight:800;font-size:15px;">' + p.n + '</div>'
+                    + '<div style="font-size:11px;color:var(--text-muted);font-weight:700;">Cód: ' + p.id + ' · ' + p.e + ' años</div>'
+                    + cambioBadge
+                    + '</div>'
+                    + '<div style="width:30px;height:30px;border:3px solid var(--border);border-radius:10px;flex-shrink:0;transition:all 0.15s; display:flex; align-items:center; justify-content:center;" class="att-chk"></div>';
+
+                c.onclick = function () {
+                    var chk = c.querySelector('.att-chk');
+                    if (ATT_STATE.presentes[p.id]) {
+                        delete ATT_STATE.presentes[p.id];
+                        chk.style.background = 'none';
+                        chk.style.borderColor = 'var(--border)';
+                        c.style.background = '';
+                    } else {
+                        ATT_STATE.presentes[p.id] = p.n;
+                        chk.style.background = 'var(--success)';
+                        chk.style.borderColor = 'var(--success)';
+                        c.style.background = '#f0fdf4';
+                    }
+                    document.getElementById('attCounter').textContent = Object.keys(ATT_STATE.presentes).length;
+                };
+                list.appendChild(c);
+            });
+            document.getElementById('attCounter').textContent = '0';
         }
 
         function volOpenWhoWasHereModal() {
             var modal = document.createElement('div');
             modal.id = 'volWhoModal';
-            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; display:flex; flex-direction:column; animation:slideUp 0.3s ease-out;';
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; display:flex; flex-direction:column;';
             
             var header = document.createElement('div');
             header.style.cssText = 'padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;';
-            header.innerHTML = '<div><div style="font-weight:900; font-size:18px;">Equipo de Hoy</div><div style="font-size:12px; color:var(--text-muted); font-weight:700;">Toca la foto de los que asistieron</div></div>'
+            header.innerHTML = '<div><div style="font-weight:900; font-size:18px;">Equipo de Hoy</div><div style="font-size:12px; color:var(--text-muted); font-weight:700;">Selecciona quiénes vinieron hoy</div></div>'
                              + '<button onclick="document.body.removeChild(document.getElementById(\'volWhoModal\'))" style="background:none; border:none; font-size:28px; color:var(--text-muted); cursor:pointer;">×</button>';
             
             var body = document.createElement('div');
-            body.style.cssText = 'flex:1; overflow-y:auto; padding:20px; display:grid; grid-template-columns: repeat(3, 1fr); gap:20px; align-content:start;';
+            body.style.cssText = 'flex:1; overflow-y:auto; padding:20px; display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;';
             
-            // Filtrar voluntarios (del grupo o coordinadores)
-            var pps = ATT_STATE.grupo.split('-')[0].trim();
-            var losVols = (APP_DB.voluntarios || []).filter(v => {
-                var gV = v.grupos || '';
-                return gV.includes(ATT_STATE.grupo) || gV.includes(pps) || (v.rol && v.rol.toLowerCase().includes('coord'));
-            }).sort((a,b) => a.nombre.localeCompare(b.nombre));
+            // Obtener voluntarios (mismo filtro que startAttendance para consistencia)
+            var losVols = (APP_DB.voluntarios || []).sort((a,b) => a.nombre.localeCompare(b.nombre));
 
             losVols.forEach(v => {
                 var card = document.createElement('div');
                 card.style.cssText = 'display:flex; flex-direction:column; align-items:center; text-align:center; cursor:pointer; position:relative;';
                 
                 var isSel = ATT_STATE.voluntariosPresentes[v.nombre];
+                var avatarStyle = 'width:60px; height:60px; border-radius:50%; object-fit:cover; border:3px solid ' + (isSel ? 'var(--success)' : 'var(--border)') + '; transition:all 0.2s;';
                 
-                // Avatar 60px
                 var avatarHtml = '';
-                var avatarStyle = 'width:65px; height:65px; border-radius:50%; object-fit:cover; border:3px solid ' + (isSel ? 'var(--success)' : 'var(--border)') + '; transition:all 0.2s;';
                 if (v.foto) {
                     var fileIdmatch = v.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                    var pId = fileIdmatch ? fileIdmatch[1] : '';
-                    var vUrl = pId ? 'https://drive.google.com/thumbnail?id=' + pId + '&sz=w200' : v.foto;
-                    avatarHtml = '<img src="' + vUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'40\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>' + v.nombre.charAt(0).toUpperCase() + '</text></svg>\';" style="' + avatarStyle + '">';
+                    var vUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=200' : v.foto;
+                    avatarHtml = '<img src="' + vUrl + '" style="' + avatarStyle + '">';
                 } else {
-                    avatarHtml = '<div style="' + avatarStyle + ' background:var(--primary-soft); color:var(--primary); font-weight:900; display:flex; align-items:center; justify-content:center; font-size:24px;">' + v.nombre.charAt(0).toUpperCase() + '</div>';
+                    avatarHtml = '<div style="' + avatarStyle + ' background:var(--primary-soft); color:var(--primary); font-weight:900; display:flex; align-items:center; justify-content:center; font-size:22px;">' + v.nombre.charAt(0).toUpperCase() + '</div>';
                 }
 
                 card.innerHTML = avatarHtml 
-                    + (isSel ? '<div style="position:absolute; top:45px; right:5px; background:var(--success); color:white; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.2);">✓</div>' : '')
-                    + '<div style="font-size:11px; font-weight:800; margin-top:8px; line-height:1.1; color:' + (isSel ? 'var(--text)' : 'var(--text-muted)') + ';">' + v.nombre.split(' ')[0] + '</div>';
+                    + (isSel ? '<div style="position:absolute; top:40px; right:0px; background:var(--success); color:white; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; border:2px solid white;">✓</div>' : '')
+                    + '<div style="font-size:10px; font-weight:800; margin-top:6px;">' + v.nombre.split(' ')[0] + '</div>';
                 
                 card.onclick = function() {
-                    if (ATT_STATE.voluntariosPresentes[v.nombre]) {
-                        delete ATT_STATE.voluntariosPresentes[v.nombre];
-                    } else {
-                        ATT_STATE.voluntariosPresentes[v.nombre] = true;
-                    }
-                    volOpenWhoWasHereModal(); // Re-render simple (podría optimizarse pero para pocos vols está bien)
+                    if (ATT_STATE.voluntariosPresentes[v.nombre]) delete ATT_STATE.voluntariosPresentes[v.nombre];
+                    else ATT_STATE.voluntariosPresentes[v.nombre] = true;
                     document.body.removeChild(modal);
+                    volOpenWhoWasHereModal(); // Re-render simple
                 };
                 body.appendChild(card);
             });
@@ -2411,110 +2501,6 @@
             modal.appendChild(body);
             modal.appendChild(footer);
             document.body.appendChild(modal);
-        }
-
-        function renderVolSelectionSummary() {
-            var volListEl = document.getElementById('attVolList');
-            volListEl.innerHTML = '';
-            var presentNames = Object.keys(ATT_STATE.voluntariosPresentes);
-            document.getElementById('attVolCount').textContent = presentNames.length;
-            
-            if (presentNames.length === 0) {
-                volListEl.innerHTML = '<div style="font-size:11px; color:var(--text-muted); font-weight:700; text-align:center; padding:10px;">⚠️ Nadie seleccionado aún</div>';
-                return;
-            }
-
-            var strip = document.createElement('div');
-            strip.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px; padding:4px 0;';
-            presentNames.forEach(name => {
-                var v = APP_DB.voluntarios.find(x => x.nombre === name) || {nombre: name};
-                var chip = document.createElement('div');
-                chip.style.cssText = 'background:white; border:1.5px solid var(--primary); border-radius:30px; padding:4px 10px 4px 6px; display:flex; align-items:center; gap:8px; font-size:11px; font-weight:800;';
-                
-                var avatarHtml = '';
-                if (v.foto) {
-                    var fileIdmatch = v.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                    var pId = fileIdmatch ? fileIdmatch[1] : '';
-                    var vUrl = pId ? 'https://drive.google.com/thumbnail?id=' + pId + '&sz=w200' : v.foto;
-                    avatarHtml = '<img src="' + vUrl + '" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">';
-                } else {
-                    avatarHtml = '<div style="width:20px; height:20px; border-radius:50%; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:10px;">' + name.charAt(0) + '</div>';
-                }
-
-                chip.innerHTML = avatarHtml + '<span>' + name.split(' ')[0] + '</span>';
-                strip.appendChild(chip);
-            });
-            volListEl.appendChild(strip);
-
-            // ── Renderizar lista de niños ──
-            var list = document.getElementById('attList');
-            list.innerHTML = '';
-
-            // Conteo de niños con cambio reciente en este grupo
-            var conCambio = ninos.filter(function (p) { return p.cambio; }).length;
-            if (conCambio > 0) {
-                var infoDiv = document.createElement('div');
-                infoDiv.className = 'alert alert-info';
-                infoDiv.style.marginBottom = '12px';
-                infoDiv.innerHTML = '<span>🔄</span><div style="font-weight:700;">'
-                    + conCambio + ' niño(s) en este grupo por cambio de horario — '
-                    + '<span style="font-size:11px;">marcados con 🔄</span></div>';
-                list.appendChild(infoDiv);
-            }
-
-            if (ninos.length === 0) {
-                list.innerHTML = '<div class="alert alert-warn"><span>⚠️</span><div>No hay niños registrados en este grupo. Verifica BD sincronizada.</div></div>';
-            }
-            ninos.forEach(function (p) {
-                var c = document.createElement('div');
-                c.className = 'card att-item';
-                c.setAttribute('data-name', norm(p.n));
-                c.style.cssText = 'display:flex;align-items:center;gap:15px;padding:14px 16px;cursor:pointer;';
-
-                // Badge de cambio si aplica
-                var cambioBadge = '';
-                if (p.cambio) {
-                    cambioBadge = '<div style="font-size:10px;font-weight:800;color:#d97706;background:#fef3c7;border-radius:6px;padding:2px 6px;margin-top:3px;display:inline-block;">'
-                        + '🔄 Cambió de ' + p.cambio.desde + '</div>';
-                }
-
-                // Avatar con Foto
-                var avatarHtml = '';
-                if (p.foto) {
-                    var fileIdmatch = p.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                    var parsedId = fileIdmatch ? fileIdmatch[1] : '';
-                    var pUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w200' : p.foto;
-                    avatarHtml = '<img src="' + pUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'40\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>' + p.n.charAt(0).toUpperCase() + '</text></svg>\';" style="width:50px; height:50px; border-radius:12px; object-fit:cover; flex-shrink:0; border:2px solid var(--border);">';
-                } else {
-                    avatarHtml = '<div style="width:50px; height:50px; border-radius:12px; background:var(--primary-soft); color:var(--primary); font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; border:2px solid var(--primary-soft);">' + p.n.charAt(0).toUpperCase() + '</div>';
-                }
-
-                c.innerHTML = avatarHtml
-                    + '<div style="flex:1;">'
-                    + '<div style="font-weight:800;font-size:15px;">' + p.n + '</div>'
-                    + '<div style="font-size:11px;color:var(--text-muted);font-weight:700;">Cód: ' + p.id + ' · ' + p.e + ' años</div>'
-                    + cambioBadge
-                    + '</div>'
-                    + '<div style="width:30px;height:30px;border:3px solid var(--border);border-radius:10px;flex-shrink:0;transition:all 0.15s; display:flex; align-items:center; justify-content:center;" class="att-chk"></div>';
-                c.onclick = function () {
-                    var chk = c.querySelector('.att-chk');
-                    if (ATT_STATE.presentes[p.id]) {
-                        delete ATT_STATE.presentes[p.id];
-                        chk.style.background = 'none';
-                        chk.style.borderColor = 'var(--border)';
-                        c.style.background = '';
-                    } else {
-                        ATT_STATE.presentes[p.id] = p.n;
-                        chk.style.background = 'var(--success)';
-                        chk.style.borderColor = 'var(--success)';
-                        c.style.background = '#f0fdf4';
-                    }
-                    document.getElementById('attCounter').textContent = Object.keys(ATT_STATE.presentes).length;
-                };
-                list.appendChild(c);
-            });
-            showView('v-vol-attendance', g, 'Asistencia · ' + g);
-            document.getElementById('attCounter').textContent = '0';
         }
 
         function volSaveAttendance() {
@@ -2544,6 +2530,7 @@
             callAPI({ data: JSON.stringify(payload) }, function () {
                 hideLoader();
                 triggerGamification('¡Asistencia Guardada! Eres una estrella.');
+                showVolDashboard();
             });
         }
 
@@ -2790,6 +2777,9 @@
                 });
             };
             r.readAsDataURL(file);
+            if (document.getElementById('comFotoInp')) document.getElementById('comFotoInp').value = '';
+        }
+
         function uploadVolProfile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -2813,7 +2803,7 @@
                             triggerGamification("¡Listo! Foto de perfil guardada.");
                             USER.foto = res.fileUrl; 
                             var fileIdmatch = res.fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                            var pUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=w200' : res.fileUrl;
+                            var pUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=200' : res.fileUrl;
                             document.getElementById('volProfileImg').src = pUrl;
                         } else {
                             showToast("Error: " + res.error, true);
@@ -2826,7 +2816,7 @@
                 });
             };
             r.readAsDataURL(file);
-            document.getElementById('volProfileInp').value = '';
+            if (document.getElementById('volProfileInp')) document.getElementById('volProfileInp').value = '';
         }
 
         // --- MÓDULO ADMIN ---
