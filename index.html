@@ -1169,9 +1169,11 @@
 
         // --- NAVEGACIÓN CON HISTORIAL NATIVO (SWIPE BACK) ---
         function showView(id, title, sub, showBack = true, backFn = null) {
-            // Enviar estado al historial del navegador para capturar el botón atrás del celular
+            // Guardar un identificador de la función de retorno si existe
+            var state = { id: id, mTitle: title, mSub: sub, showBack: showBack };
+            
             if (window.location.hash !== '#' + id) {
-                history.pushState({ id: id, mTitle: title, mSub: sub, showBack: showBack }, '', '#' + id);
+                history.pushState(state, '', '#' + id);
             }
 
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -1186,7 +1188,7 @@
             const btn = document.getElementById('backBtn');
             btn.style.display = showBack ? 'flex' : 'none';
 
-            // Si el usuario provee una funcion, ejecutamos esa, si no, usamos el historial nativo
+            // Usar backFn si se provee, si no, history.back()
             btn.onclick = backFn ? backFn : function () { history.back(); };
 
             window.scrollTo(0, 0);
@@ -1206,6 +1208,12 @@
 
                 var btn = document.getElementById('backBtn');
                 btn.style.display = e.state.showBack ? 'flex' : 'none';
+                
+                // --- HOOKS DE RE-INICIALIZACIÓN ---
+                // Si regresamos a la lista de cambio de horario, refrescarla
+                if (e.state.id === 'v-vol-change-list') {
+                    if (typeof volFilterChildren === 'function') volFilterChildren();
+                }
             } else {
                 // Fallback al inicio
                 if (USER && USER.rol) {
