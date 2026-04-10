@@ -1978,7 +1978,7 @@
                                 + '<div style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.2); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:20px; cursor:pointer;">✕</div>';
                             imgModal.style.display = 'flex';
                         };
-                        card.innerHTML = '<img src="' + cUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'12\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>Privada</text></svg>\';" style="width:100%; height:100%; object-fit:cover;">'
+                        card.innerHTML = '<img src="' + cUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'10\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>Ver Drive</text></svg>\';" style="width:100%; height:100%; object-fit:cover;">'
                         + '<div style="position:absolute; bottom:0; left:0; width:100%; padding:8px; display:flex; flex-direction:column; background:rgba(255,255,255,0.85); backdrop-filter:blur(3px);">'
                         + '<span style="color:var(--text); font-size:10px; font-weight:900;">' + String(cf.vol).split(' ')[0] + '</span>'
                         + '<span style="color:var(--text-muted); font-size:8px; font-weight:700;">' + String(cf.grupo) + '</span>'
@@ -1993,25 +1993,33 @@
                 }
             }, 0);
 
-            gruposUser.forEach(function (gNom) {
-                var gInfo = APP_DB.grupos.find(function (x) { return x.g === gNom; }) || {};
-                var ninos = APP_DB.participantes.filter(function (p) { return p.g === gNom; });
-                var c = document.createElement('div');
-                c.className = 'card';
-                c.style.cursor = 'default';
-                c.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-                    + '<div style="font-weight:900;font-size:16px;">' + gNom + '</div>'
-                    + '<span class="badge badge-primary">' + ninos.length + ' niños</span>'
-                    + '</div>'
-                    + '<div style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;">👤 Edades: ' + (gInfo.edades && gInfo.edades.length ? gInfo.edades.join(', ') : 'Todas') + '</div>'
-                    + (gInfo.dia ? '<div style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;">📅 ' + gInfo.dia + ' · ' + (gInfo.hora || '') + '</div>' : '')
-                    + (gInfo.lugar ? '<div style="font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;">📍 ' + gInfo.lugar + '</div>' : '')
-                    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">'
-                    + '<button onclick="startAttendance(\'' + gNom + '\')" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:800;cursor:pointer;">✅ Asistencia</button>'
-                    + '<button onclick="volStartGroupChange(\'' + gNom + '\')" style="background:#f59e0b;color:white;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:800;cursor:pointer;">🔄 Cambiar Grupo</button>'
-                    + '</div>';
-                list.appendChild(c);
-            });
+            if (gruposUser.length > 0) {
+                var centralBox = document.createElement('div');
+                centralBox.className = 'card';
+                centralBox.style.cssText = 'padding:16px; border-radius:16px; border:2px solid var(--primary-soft); background:white; cursor:default;';
+                
+                var hdrMsg = '<div style="font-weight:900; font-size:14px; margin-bottom:12px; color:var(--text); display:flex; justify-content:space-between; align-items:center; text-transform:uppercase;"><span>📋 Gestión de Grupos</span> <span class="badge badge-primary">' + gruposUser.length + ' ASIGNADOS</span></div>';
+                
+                var groupsHtml = '<div style="display:grid; gap:10px;">';
+                gruposUser.forEach(function(gNom) {
+                    var ninos = APP_DB.participantes.filter(function (p) { return p.g === gNom; });
+                    var gInfo = APP_DB.grupos.find(function (x) { return x.g === gNom; }) || {};
+                    
+                    groupsHtml += '<div style="display:flex; flex-direction:column; gap:8px; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid var(--border);">'
+                        + '<div style="display:flex; justify-content:space-between; align-items:center;">'
+                        + '   <div><div style="font-weight:900; font-size:15px; color:var(--primary);">' + gNom + '</div><div style="font-size:11px; color:var(--text-muted); font-weight:700;">' + ninos.length + ' niños asignados</div></div>'
+                        + '</div>'
+                        + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">'
+                        + '   <button onclick="startAttendance(\'' + gNom + '\')" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;cursor:pointer;">✅ Asistencia</button>'
+                        + '   <button onclick="volStartGroupChange(\'' + gNom + '\')" style="background:#f59e0b;color:white;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;cursor:pointer;">🔄 Mover Niños</button>'
+                        + '</div>'
+                        + '</div>';
+                });
+                groupsHtml += '</div>';
+                
+                centralBox.innerHTML = hdrMsg + groupsHtml;
+                list.appendChild(centralBox);
+            }
 
             // ── Renderizar Activity Log (Gamificación) ──
             if (APP_DB.activity_log && APP_DB.activity_log.length > 0) {
