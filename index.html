@@ -1477,51 +1477,8 @@
                                     <div style="font-size:20px;">👉</div>
                                   </div>`;
                 card.onclick = () => { 
-                    // FILTRO DE EDAD: Solo mostrar grupos donde la edad del niño esté permitida
-                    var groups = APP_DB.grupos.filter(function(g) {
-                        return g.edades.indexOf(p.e) !== -1 && g.g !== p.g;
-                    });
-
-                    if(groups.length === 0) return alert("❌ No existen grupos disponibles para la edad de este niño (" + p.e + " años).");
-                    
-                    var selPopup = document.createElement('div');
-                    selPopup.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px; flex-direction:column;';
-                    
-                    var selBox = document.createElement('div');
-                    selBox.style.cssText = 'background:white; border-radius:24px; padding:25px; width:100%; max-width:400px; box-shadow:0 20px 50px rgba(0,0,0,0.3); text-align:center;';
-                    
-                    selBox.innerHTML = '<div style="font-size:40px; margin-bottom:10px;">🔄</div>'
-                        + '<div style="font-weight:900; font-size:20px; color:var(--text); margin-bottom:5px;">Mover a ' + String(p.n).split(' ')[0] + '</div>'
-                        + '<div style="font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:20px;">Elige el nuevo grupo al que ingresarás a este participante:</div>'
-                        + '<div style="text-align:left;"><select id="volMoveSel" style="width:100%; padding:15px; border-radius:12px; border:2px solid var(--border); margin-bottom:25px; font-weight:800; font-size:14px; color:var(--primary); outline:none; appearance:none; background:var(--bg) url(\'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" fill=\"%233b82f6\"><path d=\"M12 16.5l-6-6h12l-6 6z\"/></svg>\') no-repeat right 15px center;">'
-                        + groups.map(g => '<option value="'+g.g+'">'+g.g+' ('+g.dia+' '+g.hora+')</option>').join('') + '</select></div>'
-                        + '<div style="display:flex; gap:12px;">'
-                        + '<button id="btnCanMove" style="flex:1; background:#f1f5f9; border:none; padding:15px; border-radius:12px; font-weight:800; color:var(--text-muted); cursor:pointer;">Cancelar</button>'
-                        + '<button id="btnConfMove" style="flex:1; background:#10b981; border:none; padding:15px; border-radius:12px; font-weight:800; color:white; cursor:pointer; box-shadow:0 4px 15px rgba(16,185,129,0.3);">Confirmar</button>'
-                        + '</div>';
-                    
-                    selPopup.appendChild(selBox);
-                    document.body.appendChild(selPopup);
-                    
-                    document.getElementById('btnCanMove').onclick = () => document.body.removeChild(selPopup);
-                    document.getElementById('btnConfMove').onclick = () => {
-                        var nGroup = document.getElementById('volMoveSel').value;
-                        if(!confirm("¿Seguro que deseas transferir a " + String(p.n).split(' ')[0] + " del " + p.g + " al " + nGroup + "?")) return;
-                        
-                        // Guardar en pending
-                        if(!APP_DB_LOCAL.cambios_lote_v2) APP_DB_LOCAL.cambios_lote_v2 = {};
-                        APP_DB_LOCAL.cambios_lote_v2[p.id] = {
-                            grupo_nuevo: nGroup,
-                            registrado_por: USER.nombre,
-                            fecha: Date.now()
-                        };
-                        p.g = nGroup;
-                        saveLocalDB();
-                        
-                        document.body.removeChild(selPopup);
-                        showCustomMessage("Movimiento Exitoso 🔄", `${p.n} ha sido transferido(a) a ${nGroup}. Recuerda darle a sincronizar cuando tengas WiFi.`, "var(--success)");
-                        showVolDashboard();
-                    };
+                    // Usar el flujo visual existente de 'v-vol-change-confirm'
+                    volSelectKidForChange(p);
                 };
                 resCont.appendChild(card);
             });
@@ -2279,12 +2236,24 @@
                         + '🔄 Cambió de ' + p.cambio.desde + '</div>';
                 }
 
-                c.innerHTML = '<div style="width:28px;height:28px;border:3px solid var(--border);border-radius:8px;flex-shrink:0;transition:all 0.15s;" class="att-chk"></div>'
+                // Avatar con Foto
+                var avatarHtml = '';
+                if (p.foto) {
+                    var fileIdmatch = p.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    var parsedId = fileIdmatch ? fileIdmatch[1] : '';
+                    var pUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w200' : p.foto;
+                    avatarHtml = '<img src="' + pUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'40\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>' + p.n.charAt(0).toUpperCase() + '</text></svg>\';" style="width:50px; height:50px; border-radius:12px; object-fit:cover; flex-shrink:0; border:2px solid var(--border);">';
+                } else {
+                    avatarHtml = '<div style="width:50px; height:50px; border-radius:12px; background:var(--primary-soft); color:var(--primary); font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px; border:2px solid var(--primary-soft);">' + p.n.charAt(0).toUpperCase() + '</div>';
+                }
+
+                c.innerHTML = avatarHtml
                     + '<div style="flex:1;">'
-                    + '<div style="font-weight:800;font-size:14px;">' + p.n + '</div>'
+                    + '<div style="font-weight:800;font-size:15px;">' + p.n + '</div>'
                     + '<div style="font-size:11px;color:var(--text-muted);font-weight:700;">Cód: ' + p.id + ' · ' + p.e + ' años</div>'
                     + cambioBadge
-                    + '</div>';
+                    + '</div>'
+                    + '<div style="width:30px;height:30px;border:3px solid var(--border);border-radius:10px;flex-shrink:0;transition:all 0.15s; display:flex; align-items:center; justify-content:center;" class="att-chk"></div>';
                 c.onclick = function () {
                     var chk = c.querySelector('.att-chk');
                     if (ATT_STATE.presentes[p.id]) {
@@ -2751,12 +2720,24 @@
                         vc.className = 'card att-item';
                         vc.setAttribute('data-name', norm(p.n));
                         vc.style.cssText = 'display:flex;align-items:center;gap:15px;padding:14px 16px;cursor:pointer; background:#f0fdf4; border:1px solid var(--success);';
-                        vc.innerHTML = '<div style="width:28px;height:28px;border:3px solid var(--success);background:var(--success);border-radius:8px;flex-shrink:0;"></div>'
+                        // Avatar con Foto
+                        var avatarHtml = '';
+                        if (p.foto) {
+                            var fileIdmatch = p.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                            var parsedId = fileIdmatch ? fileIdmatch[1] : '';
+                            var pUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w200' : p.foto;
+                            avatarHtml = '<img src="' + pUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'40\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>' + p.n.charAt(0).toUpperCase() + '</text></svg>\';" style="width:50px; height:50px; border-radius:12px; object-fit:cover; flex-shrink:0;">';
+                        } else {
+                            avatarHtml = '<div style="width:50px; height:50px; border-radius:12px; background:var(--primary-soft); color:var(--primary); font-weight:900; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:20px;">' + p.n.charAt(0).toUpperCase() + '</div>';
+                        }
+
+                        vc.innerHTML = avatarHtml
                             + '<div style="flex:1;">'
-                            + '<div style="font-weight:800;font-size:14px;">' + p.n + '</div>'
+                            + '<div style="font-weight:800;font-size:15px;">' + p.n + '</div>'
                             + '<div style="font-size:11px;color:var(--text-muted);font-weight:700;">Cód: ' + p.id + ' · ' + p.e + ' años</div>'
                             + '<div style="font-size:10px;font-weight:800;color:#1d4ed8;background:#dbeafe;border-radius:6px;padding:2px 6px;margin-top:3px;display:inline-block;">🌐 Viene de ' + p.g + ' (Visita)</div>'
-                            + '</div>';
+                            + '</div>'
+                            + '<div style="width:30px;height:30px;border:3px solid var(--success);background:var(--success);border-radius:10px;flex-shrink:0;"></div>';
                         vc.onclick = function () {
                             if (ATT_STATE.presentes[p.id]) {
                                 delete ATT_STATE.presentes[p.id];
