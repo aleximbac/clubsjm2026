@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <style>
         :root {
             --primary: #6366f1;
@@ -147,6 +149,75 @@
         .badge-primary {
             background: var(--primary-soft);
             color: var(--primary);
+        }
+
+        /* ── CROPPER MODAL ── */
+        #cropModal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 999999;
+            display: none;
+            flex-direction: column;
+        }
+
+        .crop-header {
+            padding: 20px;
+            background: #1e293b;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .crop-body {
+            flex: 1;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            align-items: center; justify-content: center;
+        }
+
+        .crop-footer {
+            padding: 20px;
+            background: #1e293b;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .crop-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .crop-btn-tool {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .crop-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Circulo guía sobre el cropper */
+        .cropper-view-box,
+        .cropper-face {
+            border-radius: 50%;
+        }
+
+        .cropper-view-box {
+            outline: none;
+            box-shadow: 0 0 0 1px #39f;
         }
 
         /* ── UTILS ── */
@@ -996,7 +1067,88 @@
 
     </div>
 
+    <!-- MODAL DE RECORTE (CROPPER) -->
+    <div id="cropModal">
+        <div class="crop-header">
+            <div style="font-weight: 900; font-size: 16px;">Ajustar Foto de Perfil</div>
+            <button id="btnCancelCrop" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div class="crop-body" id="cropImageContainer">
+            <!-- La imagen se cargará aquí dinámicamente -->
+        </div>
+        <div class="crop-footer">
+            <div class="crop-controls">
+                <button class="crop-btn-tool" id="btnRotateLeft" title="Girar Izquierda">↩️</button>
+                <button class="crop-btn-tool" id="btnRotateRight" title="Girar Derecha">↪️</button>
+                <button class="crop-btn-tool" id="btnZoomIn" title="Acercar">➕</button>
+                <button class="crop-btn-tool" id="btnZoomOut" title="Alejar">➖</button>
+            </div>
+            <div class="crop-actions">
+                <button class="btn btn-primary" id="btnConfirmCrop" style="flex:1;">✅ Guardar y Usar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- LÓGICA DE RECORTE (CROPPER.JS) ---
+        var MAIN_CROPPER = null;
+        function openCropModal(imgSrc, callback) {
+            const modal = document.getElementById('cropModal');
+            const container = document.getElementById('cropImageContainer');
+            container.innerHTML = '<img id="imageToCrop" src="' + imgSrc + '" style="max-width: 100%; display:block;">';
+            modal.style.display = 'flex';
+
+            const image = document.getElementById('imageToCrop');
+            if (MAIN_CROPPER) MAIN_CROPPER.destroy();
+
+            // Pequeño delay para asegurar que el DOM cargó la imagen
+            setTimeout(() => {
+                MAIN_CROPPER = new Cropper(image, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.8,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false
+                });
+            }, 50);
+
+            document.getElementById('btnConfirmCrop').onclick = function() {
+                if (!MAIN_CROPPER) return;
+                const canvas = MAIN_CROPPER.getCroppedCanvas({
+                    width: 500,
+                    height: 500,
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high'
+                });
+                const b64 = canvas.toDataURL('image/jpeg', 0.85);
+                modal.style.display = 'none';
+                MAIN_CROPPER.destroy();
+                MAIN_CROPPER = null;
+                callback(b64);
+            };
+
+            document.getElementById('btnCancelCrop').onclick = function() {
+                modal.style.display = 'none';
+                if (MAIN_CROPPER) {
+                    MAIN_CROPPER.destroy();
+                    MAIN_CROPPER = null;
+                }
+            };
+
+            document.getElementById('btnRotateLeft').onclick = () => MAIN_CROPPER.rotate(-90);
+            document.getElementById('btnRotateRight').onclick = () => MAIN_CROPPER.rotate(90);
+            document.getElementById('btnZoomIn').onclick = () => MAIN_CROPPER.zoom(0.1);
+            document.getElementById('btnZoomOut').onclick = () => MAIN_CROPPER.zoom(-0.1);
+        }
+
+        // --- FUNCIONES EXISTENTES (MODIFICADAS) ---
+
         // --- CONFIGURACIÓN ---
         // URL del Web App de Google Apps Script (actualizar después de re-publicar)
         var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwvY-XTnbkeBV5w-KZDOCnybRX0lq2F_wGVf9q3bvz-4Z9Y1I591JujtSWRlQ3fuqyy/exec";
@@ -1495,9 +1647,11 @@
             if (input.files && input.files[0]) {
                 const r = new FileReader();
                 r.onload = function(e) {
-                    CURRENT_B64_FOTO = e.target.result;
-                    document.getElementById('photoPreviewArea').style.display = 'block';
-                    document.getElementById('photoPreviewImg').src = CURRENT_B64_FOTO;
+                    openCropModal(e.target.result, (cropped) => {
+                        CURRENT_B64_FOTO = cropped;
+                        document.getElementById('photoPreviewArea').style.display = 'block';
+                        document.getElementById('photoPreviewImg').src = CURRENT_B64_FOTO;
+                    });
                 };
                 r.readAsDataURL(input.files[0]);
             }
@@ -2636,68 +2790,39 @@
                 });
             };
             r.readAsDataURL(file);
-            document.getElementById('comFotoInp').value = '';
-        }
-
-        // --- OCULTAR FOTO COMUNIDAD ---
-        function ocultarComunidadFoto(url) {
-            if(!confirm("¿Estás seguro de ocultar esta foto del muro? No se podrá deshacer.")) return;
-            document.getElementById('comFotoViewer').style.display = 'none';
-            showLoader("Retirando del muro...");
-            fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    tipo: "ocultar_comunidad_foto",
-                    url: url
-                })
-            })
-            .then(res => res.json())
-            .then(res => {
-                hideLoader();
-                if(res.ok) {
-                    showCustomMessage("Foto Oculta", "La imagen ya no aparecerá en el muro del club.", "var(--success)");
-                    volSyncSistema();
-                } else {
-                    showToast("Error ocultando foto: " + res.error, true);
-                }
-            })
-            .catch(err => {
-                hideLoader();
-                showToast("Error de red: " + err, true);
-            });
-        }
-
-        // --- SUBIDA DE FOTO PERFIL VOLUNTARIO ---
         function uploadVolProfile(event) {
             const file = event.target.files[0];
             if (!file) return;
             const r = new FileReader();
-            showLoader("Actualizando tu foto de perfil...");
             r.onload = function(e) {
-                const b64 = e.target.result;
-                fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        tipo: "upload_vol_foto",
-                        cedula: USER.cedula,
-                        nombre: USER.nombre,
-                        base64: b64
+                openCropModal(e.target.result, (cropped) => {
+                    showLoader("Actualizando tu foto de perfil...");
+                    fetch(SCRIPT_URL, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            tipo: "upload_vol_foto",
+                            cedula: USER.cedula,
+                            nombre: USER.nombre,
+                            base64: cropped
+                        })
                     })
-                })
-                .then(res => res.json())
-                .then(res => {
-                    hideLoader();
-                    if(res.ok) {
-                        triggerGamification("¡Listo! Foto de perfil guardada.");
-                        USER.foto = res.fileUrl; 
-                        document.getElementById('volProfileImg').src = res.fileUrl.replace('/file/d/', '/uc?export=view&id=').replace('/view?usp=drivesdk', '');
-                    } else {
-                        showToast("Error: " + res.error, true);
-                    }
-                })
-                .catch(err => {
-                    hideLoader();
-                    showToast("Error de red: " + err, true);
+                    .then(res => res.json())
+                    .then(res => {
+                        hideLoader();
+                        if(res.ok) {
+                            triggerGamification("¡Listo! Foto de perfil guardada.");
+                            USER.foto = res.fileUrl; 
+                            var fileIdmatch = res.fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                            var pUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=w200' : res.fileUrl;
+                            document.getElementById('volProfileImg').src = pUrl;
+                        } else {
+                            showToast("Error: " + res.error, true);
+                        }
+                    })
+                    .catch(err => {
+                        hideLoader();
+                        showToast("Error de red: " + err, true);
+                    });
                 });
             };
             r.readAsDataURL(file);
