@@ -1398,7 +1398,7 @@
                 + '<br><br>¿Qué necesitas hacer hoy?'
                 + '<div class="chat-options">'
                 + '<button class="chat-opt-btn" onclick="handleVolBotAction(\'asistencia\')" style="border-color:#10b981; color:#10b981;">📋 Tomar asistencia</button>'
-                + '<button class="chat-opt-btn" onclick="handleVolBotAction(\'cambios\')" style="border-color:#10b981; color:#10b981;">🔄 Cambiar a un niño de grupo</button>'
+                + '<button class="chat-opt-btn" onclick="handleVolBotAction(\'cambios\')" style="border-color:#10b981; color:#10b981;">🔄 Cambiar horario apadrinados</button>'
                 + '<button class="chat-opt-btn" onclick="handleVolBotAction(\'wa_links\')" style="border-color:#10b981; color:#10b981;">📲 Links de Grupos WA</button>'
                 + '<button class="chat-opt-btn" onclick="handleVolBotAction(\'faq\')" style="border-color:#10b981; color:#10b981;">❓ Tengo una duda</button>'
                 + '<button class="chat-opt-btn" onclick="handleVolBotAction(\'sync\')" style="border-color:#10b981; color:#10b981;">🔄 Sincronizar sistema</button>'
@@ -1431,7 +1431,7 @@
 
             var userText = "";
             if (action === 'asistencia') userText = "📋 Tomar asistencia";
-            if (action === 'cambios') userText = "🔄 Cambiar a un niño de grupo";
+            if (action === 'cambios') userText = "🔄 Cambiar horario apadrinados";
             if (action === 'sync') userText = "🔄 Sincronizar sistema";
             if (action === 'wa_links') userText = "📲 Links de Grupos WA";
             if (action === 'faq') userText = "❓ Tengo una duda";
@@ -1455,7 +1455,7 @@
                     volBotAddMessage(
                         '✅ Los voluntarios <b>SÍ pueden hacer cambios</b> directamente, pero es obligatorio seguir el protocolo:'
                         + '<br><br>'
-                        + '1️⃣ <b>Haz el cambio:</b> Usa el botón azul “Cambiar Grupo” en tu panel.'
+                        + '1️⃣ <b>Haz el cambio:</b> Usa la opción “Cambiar horario apadrinados” en tu panel.'
                         + '<br>'
                         + '2️⃣ `[x]` Justificaciones Familia: Cambiar textarea por select con motivos predefinidos en `v-fam-just-form`a.'
                         + '<br>'
@@ -2428,6 +2428,7 @@
                     + '<div style="width:30px;height:30px;border:3px solid var(--border);border-radius:10px;flex-shrink:0;transition:all 0.15s; display:flex; align-items:center; justify-content:center;" class="att-chk"></div>';
 
                 c.onclick = function () {
+                    if (navigator.vibrate) navigator.vibrate(25);
                     var chk = c.querySelector('.att-chk');
                     if (ATT_STATE.presentes[p.id]) {
                         delete ATT_STATE.presentes[p.id];
@@ -2484,6 +2485,7 @@
                     + '<div style="font-size:10px; font-weight:800; margin-top:6px;">' + v.nombre.split(' ')[0] + '</div>';
                 
                 card.onclick = function() {
+                    if (navigator.vibrate) navigator.vibrate(30);
                     if (ATT_STATE.voluntariosPresentes[v.nombre]) delete ATT_STATE.voluntariosPresentes[v.nombre];
                     else ATT_STATE.voluntariosPresentes[v.nombre] = true;
                     document.body.removeChild(modal);
@@ -2549,13 +2551,16 @@
             VOL_CHANGE = { grupo: gNom, kidSel: null, newGroupSel: null };
             document.getElementById('volChangeSearchInp').value = '';
             volRenderChildList(APP_DB.participantes.filter(function (p) { return p.g === gNom; }));
-            showView('v-vol-change-list', 'Cambiar Grupo', gNom, true, showVolDashboard);
+            showView('v-vol-change-list', 'Cambiar horario apadrinados', gNom, true, showVolDashboard);
         }
 
         function volFilterChildren() {
-            var q = norm(document.getElementById('volChangeSearchInp').value);
+            var inp = document.getElementById('volChangeSearchInp');
+            if (!inp) return;
+            var q = norm(inp.value);
             var base = APP_DB.participantes.filter(function (p) { return p.g === VOL_CHANGE.grupo; });
-            var res = q.length >= 2 ? base.filter(function (p) { return norm(p.n).includes(q); }) : base;
+            // Filtrar desde 1 carácter para que el usuario sienta que "funciona" al instante
+            var res = q.length > 0 ? base.filter(function (p) { return norm(p.n).includes(q); }) : base;
             volRenderChildList(res);
         }
 
@@ -2587,6 +2592,9 @@
         function volSelectKidForChange(kid) {
             VOL_CHANGE.kidSel = kid;
             VOL_CHANGE.newGroupSel = null;
+            // Limpiar buscador al elegir para que no estorbe si se regresa
+            var sInp = document.getElementById('volChangeSearchInp');
+            if (sInp) sInp.value = '';
             // Info card del niño seleccionado
             var gActual = APP_DB.grupos.find(function (x) { return x.g === kid.g; }) || {};
             document.getElementById('volChangeKidCard').innerHTML =
