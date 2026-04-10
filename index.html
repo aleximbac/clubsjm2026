@@ -1213,8 +1213,9 @@
                 window.scrollTo(0, 0);
                 
                 // --- HOOKS DE RE-INICIALIZACIÓN ---
-                // Si regresamos a la lista de cambio de horario, refrescarla
+                // Si regresamos a la lista de cambio de horario, recuperar el grupo y refrescar
                 if (e.state.id === 'v-vol-change-list') {
+                    if (e.state.mSub) VOL_CHANGE.grupo = e.state.mSub;
                     if (typeof volFilterChildren === 'function') volFilterChildren();
                 }
             } else {
@@ -2560,13 +2561,12 @@
         // Paso 1: mostrar lista de niños del grupo
         function volStartGroupChange(gNom) {
             VOL_CHANGE = { grupo: gNom, kidSel: null, newGroupSel: null };
+            showView('v-vol-change-list', 'Cambiar horario apadrinados', gNom, true, showVolDashboard);
+            
+            // Forzar limpieza y renderizado inicial
             var inp = document.getElementById('volChangeSearchInp');
             if (inp) inp.value = '';
-            var resCont = document.getElementById('volChangeChildList');
-            if (resCont) resCont.innerHTML = ''; // Limpieza previa
-            
-            volRenderChildList(APP_DB.participantes.filter(function (p) { return p.g === gNom; }));
-            showView('v-vol-change-list', 'Cambiar horario apadrinados', gNom, true, showVolDashboard);
+            volFilterChildren();
         }
 
         function volFilterChildren() {
@@ -2574,11 +2574,11 @@
             var resCont = document.getElementById('volChangeChildList');
             if (!inp || !resCont) return;
             
-            var q = norm(inp.value);
-            // Asegurar que siempre tenemos el grupo actual del estado global
-            var gNom = VOL_CHANGE.grupo;
-            if (!gNom) return;
+            // Prioridad 1: Estado global | Prioridad 2: Título de la pantalla (Resiliencia total)
+            var gNom = VOL_CHANGE.grupo || document.getElementById('hSub').textContent;
+            if (!gNom || gNom === "Children International") return;
 
+            var q = norm(inp.value);
             var base = APP_DB.participantes.filter(function (p) { return p.g === gNom; });
             var res = q.length > 0 ? base.filter(function (p) { return norm(p.n).includes(q); }) : base;
             
