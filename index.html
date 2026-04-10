@@ -1424,6 +1424,8 @@
                     showView('v-fam-update-profile', 'Perfil IA', p.n); 
                 };
                 resCont.appendChild(card);
+            });
+        }
         // --- EXCLUSIVO VOLUNTARIOS: BUSCADOR ---
         function volShowSearch(type) {
             let title = "Búsqueda General";
@@ -1503,7 +1505,7 @@
                     document.getElementById('btnCanMove').onclick = () => document.body.removeChild(selPopup);
                     document.getElementById('btnConfMove').onclick = () => {
                         var nGroup = document.getElementById('volMoveSel').value;
-                        if(!document.confirm("¿Seguro que deseas transferir a " + String(p.n).split(' ')[0] + " del " + p.g + " al " + nGroup + "?")) return;
+                        if(!confirm("¿Seguro que deseas transferir a " + String(p.n).split(' ')[0] + " del " + p.g + " al " + nGroup + "?")) return;
                         
                         // Guardar en pending
                         if(!APP_DB_LOCAL.cambios_lote_v2) APP_DB_LOCAL.cambios_lote_v2 = {};
@@ -2054,7 +2056,7 @@
                 + '<button onclick="document.getElementById(\'comFotoInp\').click()" style="background:#10b981; color:white; border:none; border-radius:12px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer; box-shadow:0 2px 5px rgba(16,185,129,0.3);">+ Subir Foto</button>'
                 + '</div>'
                 + '<input type="file" id="comFotoInp" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">'
-                + '<div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px; min-height:80px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory;" id="comFotoFeed"></div>';
+                + '<div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:15px; height:200px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory;" id="comFotoFeed"></div>';
             list.appendChild(comDiv);
 
             setTimeout(() => {
@@ -2099,18 +2101,6 @@
                         + '</div>';
                         feed.appendChild(card);
                     });
-
-                    // Lógica de "correr solas" (Auto-scroll suave)
-                    var scrollInterval = setInterval(() => {
-                        if (!feed) { clearInterval(scrollInterval); return; }
-                        var max = feed.scrollWidth - feed.clientWidth;
-                        if (feed.scrollLeft >= max - 5) {
-                            feed.scrollTo({ left: 0, behavior: 'smooth' });
-                        } else {
-                            feed.scrollBy({ left: feed.clientWidth * 0.85 + 10, behavior: 'smooth' });
-                        }
-                    }, 4000); 
-
                 } else {
                     feed.innerHTML = '<div style="flex:1; background:#f8fafc; padding:15px; border-radius:12px; border:2px dashed var(--border); text-align:center; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;">'
                     + '<span style="font-size:24px;">📸</span>'
