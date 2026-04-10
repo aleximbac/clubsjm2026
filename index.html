@@ -1061,6 +1061,7 @@
                 <h2 id="successTitle" style="font-weight:900; margin-bottom:10px;">¡Completado!</h2>
                 <p id="successMsg" style="color:var(--text-muted); font-weight:700; margin-bottom:30px;">Tu solicitud ha
                     sido procesada correctamente.</p>
+                <div id="successExtraBtns" style="display:grid; gap:10px; margin-bottom:12px;"></div>
                 <button class="btn btn-primary" onclick="goHome()">Volver al Inicio</button>
             </div>
         </div>
@@ -1145,6 +1146,18 @@
             document.getElementById('btnRotateRight').onclick = () => MAIN_CROPPER.rotate(90);
             document.getElementById('btnZoomIn').onclick = () => MAIN_CROPPER.zoom(0.1);
             document.getElementById('btnZoomOut').onclick = () => MAIN_CROPPER.zoom(-0.1);
+        }
+
+        // --- SISTEMA HÁPTICO (VIBRACIÓN PREMIUM) ---
+        function vibe(type) {
+            if (!navigator.vibrate) return;
+            switch(type) {
+                case 'TICK': navigator.vibrate(15); break;       // Selecciones suaves
+                case 'CLICK': navigator.vibrate(35); break;      // Botones principales
+                case 'SUCCESS': navigator.vibrate(100); break;   // Acción completada
+                case 'ERROR': navigator.vibrate([50, 80, 50]); break; // Alerta/Error
+                case 'MAGIC': navigator.vibrate([100, 50, 100, 50, 200]); break; // Gamificación
+            }
         }
 
         // --- FUNCIONES EXISTENTES (MODIFICADAS) ---
@@ -2604,7 +2617,7 @@
                     + '<div style="font-weight:800;font-size:14px;">' + kid.n + '</div>'
                     + '<div style="font-size:11px;color:var(--text-muted);font-weight:700;">Cód: ' + kid.id + ' · ' + kid.e + ' años · Sector ' + kid.s + '</div>'
                     + '</div><span style="font-size:20px;color:var(--text-muted);">›</span></div>';
-                d.onclick = function () { volSelectKidForChange(kid); };
+                d.onclick = function () { vibe('TICK'); volSelectKidForChange(kid); };
                 cont.appendChild(d);
             });
         }
@@ -2654,6 +2667,7 @@
                     + (g.link ? '<button onclick="copyText(event, \'' + g.link + '\')" style="margin-top:8px; padding:4px 8px; font-size:11px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; border-radius:6px; font-weight:800; cursor:pointer;" class="btn-copy">📋 Copiar Enlace WA</button>' : '')
                     + '</div><span id="vgc_chk_' + g.g.replace(/ /g, '_') + '" style="font-size:22px;">⬜</span></div>';
                 d.onclick = function () {
+                    vibe('TICK');
                     // Deselect all
                     disponibles.forEach(function (x) {
                         var el = document.getElementById('vgc_' + x.g.replace(/ /g, '_'));
@@ -2703,10 +2717,27 @@
                 hideLoader();
                 if (resp.ok) {
                     showSuccess('🔄 Cambio Registrado', kid.n + ' fue movido/a a ' + g.g + ' · ' + g.dia + ' ' + g.hora + '.\n\nRegistrado por: ' + USER.nombre);
+                    
+                    // Inyectar botón para cambiar a otro apadrinado
+                    var contExtras = document.getElementById('successExtraBtns');
+                    if (contExtras) {
+                        var btn = document.createElement('button');
+                        btn.className = 'btn btn-outline';
+                        btn.style.borderColor = 'var(--primary)';
+                        btn.style.color = 'var(--primary)';
+                        btn.innerHTML = '🔄 Cambiar a otro apadrinado';
+                        btn.onclick = function() { 
+                            vibe('CLICK');
+                            volStartGroupChange(kid.g_original || kid.g); 
+                        };
+                        contExtras.appendChild(btn);
+                    }
+
                     // Actualización local
                     var idx = APP_DB.participantes.findIndex(x => x.id === kid.id);
                     if (idx > -1) { APP_DB.participantes[idx].g = g.g; }
                 } else {
+                    vibe('ERROR');
                     alert('Error: ' + (resp.error || 'No se pudo procesar'));
                 }
             });
@@ -3029,10 +3060,12 @@
 
         // --- SUCCESS SCREEN ---
         function showSuccess(title, msg) {
+            vibe('SUCCESS');
             document.getElementById('successTitle').textContent = title || '¡Completado!';
             document.getElementById('successTitle').style.color = 'var(--text)';
             document.getElementById('successMsg').textContent = msg || 'Tu solicitud fue procesada.';
             document.getElementById('successMsg').style.color = 'var(--text)';
+            document.getElementById('successExtraBtns').innerHTML = ''; // Limpiar extras
             showView('v-success', title || '¡Listo!', 'Operación exitosa', false);
         }
 
@@ -3043,6 +3076,7 @@
             document.getElementById('successMsg').textContent = msg || 'Tu solicitud fue procesada.';
             document.getElementById('successMsg').style.color = color === "var(--danger)" ? "var(--danger)" : "var(--text)";
             document.getElementById('successMsg').style.fontWeight = "900";
+            document.getElementById('successExtraBtns').innerHTML = ''; // Limpiar extras
             showView('v-success', title || '¡Listo!', 'Aviso', false);
         }
 
@@ -3055,13 +3089,15 @@
                 t.innerHTML = '<span>' + (isError?'❌':'⭐') + '</span> <div>' + msg + '</div>';
                 tc.appendChild(t);
                 setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateY(0)'; }, 10);
-                if (navigator.vibrate) navigator.vibrate(isError ? [50, 100, 50] : [200]);
+                
+                vibe(isError ? 'ERROR' : 'CLICK');
+                
                 setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; setTimeout(() => t.remove(), 300); }, 3000);
             }
         }
 
         function triggerGamification(msg) {
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+            vibe('MAGIC');
             showToast(msg);
             var conf = document.createElement('div');
             conf.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9998; background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(255,255,255,0) 70%); transition:opacity 1s;';
