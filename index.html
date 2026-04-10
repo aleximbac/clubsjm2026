@@ -1391,9 +1391,10 @@
             else if (type === 'contact') inp.oninput = famContSearch;
             else if (type === 'update_profile') inp.oninput = famUpdProfileSearch;
             else if (type === 'vol_query') inp.oninput = () => famDoSearch('vol_query');
+            else if (type === 'vol_move_kid') inp.oninput = volMoveKidSearch;
             else inp.oninput = () => famDoSearch('main');
 
-            const backFunc = (type === 'vol_query') ? showVolDashboard : initFamilias;
+            const backFunc = (type === 'vol_query' || type === 'vol_move_kid') ? showVolDashboard : initFamilias;
             showView('v-fam-search', 'Búsqueda', 'A tiempo real', true, backFunc);
         }
 
@@ -1414,6 +1415,59 @@
                     document.getElementById('photoPreviewArea').style.display = 'none';
                     document.getElementById('updPhotoInp').value = '';
                     showView('v-fam-update-profile', 'Perfil IA', p.n); 
+                };
+                resCont.appendChild(card);
+            });
+        }
+        
+        // --- MOVER NIÑO (VOLUNTARIO) ---
+        function volMoveKidSearch() {
+            const q = norm(document.getElementById('famSearchInp').value);
+            const resCont = document.getElementById('famSearchRes');
+            if (q.length < 2) { resCont.innerHTML = ''; return; }
+            const found = APP_DB.participantes.filter(p => norm(p.n).includes(q)).slice(0, 8);
+            resCont.innerHTML = '';
+            found.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card'; card.style.cursor = 'pointer';
+                card.innerHTML = `<div style="font-weight:900;">${p.n}</div><div style="font-size:11px; color:var(--text-muted);">${p.e} años · G. Actual: ${p.g}</div>`;
+                card.onclick = () => { 
+                    var groups = APP_DB.grupos.map(g => g.g).filter(gn => gn !== p.g);
+                    if(groups.length === 0) return alert("No hay otros grupos disponibles.");
+                    
+                    var selPopup = document.createElement('div');
+                    selPopup.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;';
+                    
+                    var selBox = document.createElement('div');
+                    selBox.style.cssText = 'background:white; border-radius:20px; padding:20px; width:100%; max-width:400px; box-shadow:0 10px 40px rgba(0,0,0,0.2);';
+                    
+                    selBox.innerHTML = '<div style="font-weight:900; font-size:18px; margin-bottom:5px;">Mover a ' + String(p.n).split(' ')[0] + '</div>'
+                        + '<div style="font-size:12px; color:var(--text-muted); margin-bottom:15px;">Selecciona el nuevo grupo al que quieres transferirlo:</div>'
+                        + '<select id="volMoveSel" style="width:100%; padding:12px; border-radius:10px; border:2px solid var(--border); margin-bottom:15px; font-weight:700;">'
+                        + groups.map(g => '<option value="'+g+'">'+g+'</option>').join('') + '</select>'
+                        + '<div style="display:flex; gap:10px;">'
+                        + '<button id="btnCanMove" style="flex:1; background:var(--bg); border:none; padding:12px; border-radius:10px; font-weight:800; color:var(--text-muted); cursor:pointer;">Cancelar</button>'
+                        + '<button id="btnConfMove" style="flex:1; background:#f59e0b; border:none; padding:12px; border-radius:10px; font-weight:800; color:white; cursor:pointer;">Mover</button>'
+                        + '</div>';
+                    
+                    selPopup.appendChild(selBox);
+                    document.body.appendChild(selPopup);
+                    
+                    document.getElementById('btnCanMove').onclick = () => document.body.removeChild(selPopup);
+                    document.getElementById('btnConfMove').onclick = () => {
+                        var nGroup = document.getElementById('volMoveSel').value;
+                        if(!APP_DB_LOCAL.cambios_lote_v2) APP_DB_LOCAL.cambios_lote_v2 = {};
+                        APP_DB_LOCAL.cambios_lote_v2[p.id] = {
+                            grupo_nuevo: nGroup,
+                            registrado_por: USER.nombre,
+                            fecha: Date.now()
+                        };
+                        p.g = nGroup;
+                        saveLocalDB();
+                        document.body.removeChild(selPopup);
+                        showCustomMessage("Niño Movido ✅", `Has asignado a ${p.n} al ${nGroup}. Recuerda sincronizar luego.`, "var(--success)");
+                        showVolDashboard();
+                    };
                 };
                 resCont.appendChild(card);
             });
@@ -1902,14 +1956,14 @@
                 + '<h2 style="margin:0; font-weight:900; font-size:22px;">Club Montalvo</h2>'
                 + '<button onclick="volLogout()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:6px 12px; border-radius:12px; font-weight:800; font-size:12px; cursor:pointer; backdrop-filter:blur(5px);">Salir</button>'
                 + '</div>'
-                + '<div style="margin-top:20px; font-size:14px; font-weight:700; opacity:0.9;">¡Hola de nuevo, ' + String(USER.nombre).split(" ")[0] + '!</div>'
+                + '<div style="margin-top:20px; font-size:14px; font-weight:700; opacity:0.9;">¡Hola de nuevo, ' + String(USER.nombre).split(" ")[0] + '! Eres nuestro/a ' + String(USER.rol || 'voluntario/a').toUpperCase() + ' estrella ⭐</div>'
                 + '</div>'
-                + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">'
+                + '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">'
                 + '<button onclick="famShowSearch(\'vol_query\')" style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔍 Horarios</button>'
-                + '<button onclick="famShowSearch(\'grupo\')" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔄 Cambiar de Horario</button>'
                 + '<button onclick="volShowJustification()" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">📝 Justificar</button>'
                 + '<button onclick="volSyncSistema()" style="background:var(--primary-soft); color:var(--primary); border:1px solid var(--primary-soft); border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔄 Sync</button>'
-                + '</div>';
+                + '</div>'
+                + '<button onclick="famShowSearch(\'vol_move_kid\')" style="margin-top:8px; width:100%; background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔄 Cambio de Horario General</button>';
             list.appendChild(hdr);
 
             if (esCoord) {
@@ -2004,20 +2058,25 @@
                 var centralBox = document.createElement('div');
                 centralBox.style.cssText = 'margin-bottom:20px;';
                 
-                var btnTomarAsistencia = '<button onclick="document.getElementById(\'boxGruposAsignados\').style.display = document.getElementById(\'boxGruposAsignados\').style.display === \'none\' ? \'block\' : \'none\';" style="width:100%; background:var(--primary); color:white; border:none; padding:16px; border-radius:16px; font-weight:900; font-size:16px; cursor:pointer; box-shadow:0 4px 15px rgba(59,130,246,0.3); display:flex; justify-content:center; align-items:center; gap:8px;">✅ Tomar Asistencia ('+ gruposUser.length +')</button>';
+                var btnTomarAsistencia = '<button onclick="document.getElementById(\'modalGruposAsignados\').style.display = \'flex\';" style="width:100%; background:var(--primary); color:white; border:none; padding:16px; border-radius:16px; font-weight:900; font-size:16px; cursor:pointer; box-shadow:0 4px 15px rgba(59,130,246,0.3); display:flex; justify-content:center; align-items:center; gap:8px;">✅ Tomar Asistencia ('+ gruposUser.length +')</button>';
 
-                var groupsHtml = '<div id="boxGruposAsignados" style="display:none; margin-top:10px; padding:15px; border-radius:16px; border:2px solid var(--primary-soft); background:white;">'
-                    + '<div style="display:grid; gap:10px;">';
+                var groupsHtml = '<div id="modalGruposAsignados" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; padding:20px;">'
+                    + '<div style="background:white; border-radius:20px; width:100%; max-width:450px; padding:20px; box-shadow:0 10px 40px rgba(0,0,0,0.2); max-height:80vh; display:flex; flex-direction:column;">'
+                    + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">'
+                    + '<div style="font-weight:900; font-size:18px;">✅ Tomar Asistencia</div>'
+                    + '<button onclick="document.getElementById(\'modalGruposAsignados\').style.display=\'none\'" style="background:#f8fafc; border:none; border-radius:50%; width:30px; height:30px; font-weight:900; cursor:pointer;">✕</button>'
+                    + '</div>'
+                    + '<div style="display:grid; gap:10px; overflow-y:auto; padding-right:5px; -webkit-overflow-scrolling:touch;">';
                 
                 gruposUser.forEach(function(gNom) {
                     var ninos = APP_DB.participantes.filter(function (p) { return p.g === gNom; });
                     
                     groupsHtml += '<div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid var(--border);">'
                         + '   <div><div style="font-weight:900; font-size:15px; color:var(--primary);">' + gNom + '</div><div style="font-size:11px; color:var(--text-muted); font-weight:700;">' + ninos.length + ' niños asignados</div></div>'
-                        + '   <button onclick="startAttendance(\'' + gNom + '\')" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;">Ingresar</button>'
+                        + '   <button onclick="document.getElementById(\'modalGruposAsignados\').style.display=\'none\'; startAttendance(\'' + gNom + '\');" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;">Ingresar</button>'
                         + '</div>';
                 });
-                groupsHtml += '</div></div>';
+                groupsHtml += '</div></div></div>';
                 
                 centralBox.innerHTML = btnTomarAsistencia + groupsHtml;
                 list.appendChild(centralBox);
