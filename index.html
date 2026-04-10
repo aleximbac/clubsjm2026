@@ -1474,8 +1474,12 @@
                                     <div style="font-size:20px;">👉</div>
                                   </div>`;
                 card.onclick = () => { 
-                    var groups = APP_DB.grupos.map(g => g.g).filter(gn => gn !== p.g);
-                    if(groups.length === 0) return alert("No hay otros grupos disponibles.");
+                    // FILTRO DE EDAD: Solo mostrar grupos donde la edad del niño esté permitida
+                    var groups = APP_DB.grupos.filter(function(g) {
+                        return g.edades.indexOf(p.e) !== -1;
+                    }).map(g => g.g).filter(gn => gn !== p.g);
+
+                    if(groups.length === 0) return alert("❌ No existen grupos disponibles para la edad de este niño (" + p.e + " años).");
                     
                     var selPopup = document.createElement('div');
                     selPopup.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px; flex-direction:column;';
@@ -2056,13 +2060,15 @@
             setTimeout(() => {
                 var feed = comDiv.querySelector('#comFotoFeed');
                 if (APP_DB.comunidad_fotos && APP_DB.comunidad_fotos.length > 0) {
-                    APP_DB.comunidad_fotos.slice().reverse().forEach(function(cf) {
+                    // Tomar solo las últimas 10
+                    var diezFotos = APP_DB.comunidad_fotos.slice(-10).reverse();
+                    diezFotos.forEach(function(cf) {
                         var fileIdmatch = cf.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         var parsedId = fileIdmatch ? fileIdmatch[1] : '';
                         var cUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w1000' : '';
                         
                         var card = document.createElement('div');
-                        card.style.cssText = 'scroll-snap-align:start; min-width:120px; width:120px; height:120px; border-radius:12px; overflow:hidden; border:2px solid var(--border); position:relative; background: #e2e8f0; flex-shrink:0; cursor:pointer;';
+                        card.style.cssText = 'scroll-snap-align:center; min-width:85%; width:85%; height:180px; border-radius:16px; overflow:hidden; border:2px solid var(--border); position:relative; background: #e2e8f0; flex-shrink:0; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:transform 0.3s;';
                         card.onclick = function() {
                             var imgModal = document.getElementById('comFotoViewer');
                             if (!imgModal) {
@@ -2087,12 +2093,24 @@
                             imgModal.style.display = 'flex';
                         };
                         card.innerHTML = '<img src="' + cUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'10\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>Sin Foto</text></svg>\';" style="width:100%; height:100%; object-fit:cover;">'
-                        + '<div style="position:absolute; bottom:0; left:0; width:100%; padding:8px; display:flex; flex-direction:column; background:rgba(255,255,255,0.85); backdrop-filter:blur(3px);">'
-                        + '<span style="color:var(--text); font-size:10px; font-weight:900;">' + String(cf.vol).split(' ')[0] + '</span>'
-                        + '<span style="color:var(--text-muted); font-size:8px; font-weight:700;">' + String(cf.grupo) + '</span>'
+                        + '<div style="position:absolute; bottom:0; left:0; width:100%; padding:12px; display:flex; flex-direction:column; background:linear-gradient(to top, rgba(0,0,0,0.7), transparent);">'
+                        + '<span style="color:white; font-size:12px; font-weight:900;">' + String(cf.vol) + '</span>'
+                        + '<span style="color:rgba(255,255,255,0.8); font-size:10px; font-weight:700;">' + String(cf.grupo) + '</span>'
                         + '</div>';
                         feed.appendChild(card);
                     });
+
+                    // Lógica de "correr solas" (Auto-scroll suave)
+                    var scrollInterval = setInterval(() => {
+                        if (!feed) { clearInterval(scrollInterval); return; }
+                        var max = feed.scrollWidth - feed.clientWidth;
+                        if (feed.scrollLeft >= max - 5) {
+                            feed.scrollTo({ left: 0, behavior: 'smooth' });
+                        } else {
+                            feed.scrollBy({ left: feed.clientWidth * 0.85 + 10, behavior: 'smooth' });
+                        }
+                    }, 4000); 
+
                 } else {
                     feed.innerHTML = '<div style="flex:1; background:#f8fafc; padding:15px; border-radius:12px; border:2px dashed var(--border); text-align:center; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;">'
                     + '<span style="font-size:24px;">📸</span>'
