@@ -479,10 +479,19 @@
                 <div class="input-group" style="position:sticky; top:0; background:rgba(255,255,255,0.95); z-index:10; padding:15px; border-bottom:1px solid var(--border); backdrop-filter:blur(10px); margin:-15px -15px 15px -15px;">
                     <label class="label" id="searchInpLabel" style="margin-bottom:8px;">Nombre del apadrinado/a</label>
                     <div style="display:flex; gap:10px;">
-                        <input type="text" id="famSearchInp" class="input" placeholder="Escribe al menos 2 letras..." style="flex:1; box-shadow:0 4px 10px rgba(0,0,0,0.05);" oninput="famPerformSearch()">
+                        <input type="text" id="famSearchInp" class="input" placeholder="Escribe al menos 2 letras..." style="flex:1; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
                     </div>
                 </div>
                 <div id="famSearchRes" style="display:grid; gap:10px; padding-bottom:20px;"></div>
+            </div>
+
+            <!-- VOL-SEARCH (Exclusivo Voluntarios) -->
+            <div class="view" id="v-vol-search">
+                <div style="background:linear-gradient(135deg, var(--primary), var(--primary-dark)); padding:20px 15px; margin:-15px -15px 15px -15px; border-radius:0 0 20px 20px; color:white; box-shadow:0 5px 15px rgba(59,130,246,0.3);">
+                    <div style="font-weight:900; font-size:18px; margin-bottom:10px;" id="volSearchTitle">Buscador de Club</div>
+                    <input type="text" id="volSearchInp" placeholder="Ingresa el nombre del niño/a..." style="width:100%; border:none; padding:12px; border-radius:12px; font-weight:700; color:var(--text); box-shadow:0 2px 10px rgba(0,0,0,0.1); outline:none;">
+                </div>
+                <div id="volSearchRes" style="display:grid; gap:10px; padding-bottom:20px;"></div>
             </div>
 
             <!-- FAM-INFO -->
@@ -1390,11 +1399,9 @@
             if (type === 'justify') inp.oninput = famJustSearch;
             else if (type === 'contact') inp.oninput = famContSearch;
             else if (type === 'update_profile') inp.oninput = famUpdProfileSearch;
-            else if (type === 'vol_query') inp.oninput = () => famDoSearch('vol_query');
-            else if (type === 'vol_move_kid') inp.oninput = volMoveKidSearch;
             else inp.oninput = () => famDoSearch('main');
 
-            const backFunc = (type === 'vol_query' || type === 'vol_move_kid') ? showVolDashboard : initFamilias;
+            const backFunc = initFamilias;
             showView('v-fam-search', 'Búsqueda', 'A tiempo real', true, backFunc);
         }
 
@@ -1417,37 +1424,73 @@
                     showView('v-fam-update-profile', 'Perfil IA', p.n); 
                 };
                 resCont.appendChild(card);
+        // --- EXCLUSIVO VOLUNTARIOS: BUSCADOR ---
+        function volShowSearch(type) {
+            let title = "Búsqueda General";
+            if (type === 'vol_query') title = "🔍 Consultar Horario";
+            if (type === 'vol_move_kid') title = "🔄 Mover Niño/a de Grupo";
+
+            document.getElementById('volSearchTitle').textContent = title;
+            const inp = document.getElementById('volSearchInp');
+            inp.value = ""; document.getElementById('volSearchRes').innerHTML = "";
+
+            if (type === 'vol_query') inp.oninput = () => volDoSearchQuery();
+            else if (type === 'vol_move_kid') inp.oninput = volMoveKidSearch;
+
+            showView('v-vol-search', 'Buscador', 'Club Montalvo', true, showVolDashboard);
+        }
+
+        function volDoSearchQuery() {
+            const q = norm(document.getElementById('volSearchInp').value);
+            const resCont = document.getElementById('volSearchRes');
+            if (q.length < 2) { resCont.innerHTML = ''; return; }
+            const found = APP_DB.participantes.filter(p => norm(p.n).includes(q)).slice(0, 15);
+            resCont.innerHTML = '';
+            found.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card'; card.style.cursor = 'default';
+                card.innerHTML = `<div style="font-weight:900; font-size:15px; margin-bottom:5px;">${p.n}</div>
+                                  <div style="font-size:12px; color:var(--text-muted);">
+                                     <b>Grupo:</b> <span class="badge badge-primary">${p.g}</span><br>
+                                     <b>Edad:</b> ${p.e} años<br>
+                                     <b>Sector:</b> ${p.s}
+                                  </div>`;
+                resCont.appendChild(card);
             });
         }
-        
-        // --- MOVER NIÑO (VOLUNTARIO) ---
+
         function volMoveKidSearch() {
-            const q = norm(document.getElementById('famSearchInp').value);
-            const resCont = document.getElementById('famSearchRes');
+            const q = norm(document.getElementById('volSearchInp').value);
+            const resCont = document.getElementById('volSearchRes');
             if (q.length < 2) { resCont.innerHTML = ''; return; }
-            const found = APP_DB.participantes.filter(p => norm(p.n).includes(q)).slice(0, 8);
+            const found = APP_DB.participantes.filter(p => norm(p.n).includes(q)).slice(0, 10);
             resCont.innerHTML = '';
             found.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'card'; card.style.cursor = 'pointer';
-                card.innerHTML = `<div style="font-weight:900;">${p.n}</div><div style="font-size:11px; color:var(--text-muted);">${p.e} años · G. Actual: ${p.g}</div>`;
+                card.style.cssText += ' border-left:4px solid #f59e0b;';
+                card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div><div style="font-weight:900; font-size:15px;">${p.n}</div><div style="font-size:11px; color:var(--text-muted); font-weight:700;">${p.e} años · Grupo Actual: <span style="color:var(--primary);">${p.g}</span></div></div>
+                                    <div style="font-size:20px;">👉</div>
+                                  </div>`;
                 card.onclick = () => { 
                     var groups = APP_DB.grupos.map(g => g.g).filter(gn => gn !== p.g);
                     if(groups.length === 0) return alert("No hay otros grupos disponibles.");
                     
                     var selPopup = document.createElement('div');
-                    selPopup.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;';
+                    selPopup.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px; flex-direction:column;';
                     
                     var selBox = document.createElement('div');
-                    selBox.style.cssText = 'background:white; border-radius:20px; padding:20px; width:100%; max-width:400px; box-shadow:0 10px 40px rgba(0,0,0,0.2);';
+                    selBox.style.cssText = 'background:white; border-radius:24px; padding:25px; width:100%; max-width:400px; box-shadow:0 20px 50px rgba(0,0,0,0.3); text-align:center;';
                     
-                    selBox.innerHTML = '<div style="font-weight:900; font-size:18px; margin-bottom:5px;">Mover a ' + String(p.n).split(' ')[0] + '</div>'
-                        + '<div style="font-size:12px; color:var(--text-muted); margin-bottom:15px;">Selecciona el nuevo grupo al que quieres transferirlo:</div>'
-                        + '<select id="volMoveSel" style="width:100%; padding:12px; border-radius:10px; border:2px solid var(--border); margin-bottom:15px; font-weight:700;">'
-                        + groups.map(g => '<option value="'+g+'">'+g+'</option>').join('') + '</select>'
-                        + '<div style="display:flex; gap:10px;">'
-                        + '<button id="btnCanMove" style="flex:1; background:var(--bg); border:none; padding:12px; border-radius:10px; font-weight:800; color:var(--text-muted); cursor:pointer;">Cancelar</button>'
-                        + '<button id="btnConfMove" style="flex:1; background:#f59e0b; border:none; padding:12px; border-radius:10px; font-weight:800; color:white; cursor:pointer;">Mover</button>'
+                    selBox.innerHTML = '<div style="font-size:40px; margin-bottom:10px;">🔄</div>'
+                        + '<div style="font-weight:900; font-size:20px; color:var(--text); margin-bottom:5px;">Mover a ' + String(p.n).split(' ')[0] + '</div>'
+                        + '<div style="font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:20px;">Elige el nuevo grupo al que ingresarás a este participante:</div>'
+                        + '<div style="text-align:left;"><select id="volMoveSel" style="width:100%; padding:15px; border-radius:12px; border:2px solid var(--border); margin-bottom:25px; font-weight:800; font-size:15px; color:var(--primary); outline:none; appearance:none; background:var(--bg) url(\'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" fill=\"%233b82f6\"><path d=\"M12 16.5l-6-6h12l-6 6z\"/></svg>\') no-repeat right 15px center;">'
+                        + groups.map(g => '<option value="'+g+'">'+g+'</option>').join('') + '</select></div>'
+                        + '<div style="display:flex; gap:12px;">'
+                        + '<button id="btnCanMove" style="flex:1; background:#f1f5f9; border:none; padding:15px; border-radius:12px; font-weight:800; color:var(--text-muted); cursor:pointer;">Cancelar</button>'
+                        + '<button id="btnConfMove" style="flex:1; background:#10b981; border:none; padding:15px; border-radius:12px; font-weight:800; color:white; cursor:pointer; box-shadow:0 4px 15px rgba(16,185,129,0.3);">Confirmar</button>'
                         + '</div>';
                     
                     selPopup.appendChild(selBox);
@@ -1456,6 +1499,9 @@
                     document.getElementById('btnCanMove').onclick = () => document.body.removeChild(selPopup);
                     document.getElementById('btnConfMove').onclick = () => {
                         var nGroup = document.getElementById('volMoveSel').value;
+                        if(!document.confirm("¿Seguro que deseas transferir a " + String(p.n).split(' ')[0] + " del " + p.g + " al " + nGroup + "?")) return;
+                        
+                        // Guardar en pending
                         if(!APP_DB_LOCAL.cambios_lote_v2) APP_DB_LOCAL.cambios_lote_v2 = {};
                         APP_DB_LOCAL.cambios_lote_v2[p.id] = {
                             grupo_nuevo: nGroup,
@@ -1464,8 +1510,9 @@
                         };
                         p.g = nGroup;
                         saveLocalDB();
+                        
                         document.body.removeChild(selPopup);
-                        showCustomMessage("Niño Movido ✅", `Has asignado a ${p.n} al ${nGroup}. Recuerda sincronizar luego.`, "var(--success)");
+                        showCustomMessage("Movimiento Exitoso 🔄", `${p.n} ha sido transferido(a) a ${nGroup}. Recuerda darle a sincronizar cuando tengas WiFi.`, "var(--success)");
                         showVolDashboard();
                     };
                 };
@@ -1959,11 +2006,11 @@
                 + '<div style="margin-top:20px; font-size:14px; font-weight:700; opacity:0.9;">¡Hola de nuevo, ' + String(USER.nombre).split(" ")[0] + '! Eres nuestro/a ' + String(USER.rol || 'voluntario/a').toUpperCase() + ' estrella ⭐</div>'
                 + '</div>'
                 + '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">'
-                + '<button onclick="famShowSearch(\'vol_query\')" style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔍 Horarios</button>'
+                + '<button onclick="volShowSearch(\'vol_query\')" style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔍 Horarios</button>'
                 + '<button onclick="volShowJustification()" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">📝 Justificar</button>'
                 + '<button onclick="volSyncSistema()" style="background:var(--primary-soft); color:var(--primary); border:1px solid var(--primary-soft); border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔄 Sync</button>'
                 + '</div>'
-                + '<button onclick="famShowSearch(\'vol_move_kid\')" style="margin-top:8px; width:100%; background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔄 Cambio de Horario General</button>';
+                + '<button onclick="volShowSearch(\'vol_move_kid\')" style="margin-top:8px; width:100%; background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔄 Cambio de Horario General</button>';
             list.appendChild(hdr);
 
             if (esCoord) {
