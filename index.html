@@ -245,23 +245,26 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border-radius: 50%;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
             display: none;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
+            font-size: 26px;
             color: white;
             cursor: pointer;
             z-index: 998;
-            transition: transform 0.3s;
+            opacity: 0.5;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .chatbot-fab:active {
-            transform: scale(0.9);
+        .chatbot-fab:hover, .chatbot-fab:active {
+            opacity: 1;
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
         }
 
         .chatbot-window {
@@ -766,7 +769,7 @@
             <div class="view" id="v-vol-dash">
                 <div style="margin-bottom:20px; display:flex; align-items:center; gap:15px;">
                     <div style="position:relative; width:65px; height:65px; flex-shrink:0;">
-                        <img id="volProfileImg" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='#cbd5e1'/></svg>" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid var(--primary); cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);" onclick="document.getElementById('volProfileInp').click()">
+                        <img id="volProfileImg" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'12\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>Sin Foto</text></svg>';" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='#cbd5e1'/></svg>" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid var(--primary); cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);" onclick="document.getElementById('volProfileInp').click()">
                         <div style="position:absolute; bottom:0; right:0; background:white; border-radius:50%; padding:4px; box-shadow:0 2px 5px rgba(0,0,0,0.2); font-size:12px; cursor:pointer;" onclick="document.getElementById('volProfileInp').click()">✏️</div>
                     </div>
                     <input type="file" id="volProfileInp" accept="image/*" style="display:none" onchange="uploadVolProfile(event)">
@@ -1942,7 +1945,7 @@
                 + '<button onclick="document.getElementById(\'comFotoInp\').click()" style="background:#10b981; color:white; border:none; border-radius:12px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer; box-shadow:0 2px 5px rgba(16,185,129,0.3);">+ Subir Foto</button>'
                 + '</div>'
                 + '<input type="file" id="comFotoInp" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">'
-                + '<div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px; min-height:80px;" id="comFotoFeed"></div>';
+                + '<div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px; min-height:80px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory;" id="comFotoFeed"></div>';
             list.appendChild(comDiv);
 
             setTimeout(() => {
@@ -1951,8 +1954,31 @@
                     APP_DB.comunidad_fotos.slice().reverse().forEach(function(cf) {
                         var cUrl = cf.url ? cf.url.replace('/file/d/', '/uc?export=view&id=').replace('/view?usp=drivesdk', '') : '';
                         var card = document.createElement('div');
-                        card.style.cssText = 'min-width:120px; width:120px; height:120px; border-radius:12px; overflow:hidden; border:2px solid var(--border); position:relative; background: #e2e8f0; flex-shrink:0;';
-                        card.innerHTML = '<img src="' + cUrl + '" style="width:100%; height:100%; object-fit:cover;">'
+                        card.style.cssText = 'scroll-snap-align:start; min-width:120px; width:120px; height:120px; border-radius:12px; overflow:hidden; border:2px solid var(--border); position:relative; background: #e2e8f0; flex-shrink:0; cursor:pointer;';
+                        card.onclick = function() {
+                            var imgModal = document.getElementById('comFotoViewer');
+                            if (!imgModal) {
+                                imgModal = document.createElement('div');
+                                imgModal.id = 'comFotoViewer';
+                                imgModal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; display:none; align-items:center; justify-content:center; flex-direction:column;';
+                                imgModal.onclick = function() { this.style.display = 'none'; };
+                                document.body.appendChild(imgModal);
+                            }
+                            
+                            var isOwner = (USER && USER.nombre === cf.vol);
+                            var isAdmin = (USER && (USER.rol === 'admin' || USER.rol === 'coordinador'));
+                            var hideBtn = '';
+                            if(isOwner || isAdmin) {
+                                hideBtn = '<button onclick="event.stopPropagation(); ocultarComunidadFoto(\'' + cf.url + '\')" style="margin-top:20px; background:#ef4444; color:white; border:none; border-radius:8px; padding:10px 20px; font-weight:800; cursor:pointer;">🗑️ Ocultar del Muro</button>';
+                            }
+
+                            imgModal.innerHTML = '<img src="' + cUrl + '" style="max-width:90%; max-height:70vh; border-radius:12px; object-fit:contain; box-shadow:0 10px 30px rgba(0,0,0,0.5);">'
+                                + '<div style="color:white; font-size:14px; font-weight:800; margin-top:15px; text-align:center;">' + cf.vol + ' <br> <span style="font-weight:400; font-size:11px; opacity:0.7;">' + cf.grupo + ' · ' + cf.fecha + '</span></div>'
+                                + hideBtn
+                                + '<div style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.2); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:20px; cursor:pointer;">✕</div>';
+                            imgModal.style.display = 'flex';
+                        };
+                        card.innerHTML = '<img src="' + cUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'12\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>Privada</text></svg>\';" style="width:100%; height:100%; object-fit:cover;">'
                         + '<div style="position:absolute; bottom:0; left:0; width:100%; padding:8px; display:flex; flex-direction:column; background:rgba(255,255,255,0.85); backdrop-filter:blur(3px);">'
                         + '<span style="color:var(--text); font-size:10px; font-weight:900;">' + String(cf.vol).split(' ')[0] + '</span>'
                         + '<span style="color:var(--text-muted); font-size:8px; font-weight:700;">' + String(cf.grupo) + '</span>'
@@ -2001,25 +2027,30 @@
 
                 logsReversed.forEach(function (log) {
                     var dLog = document.createElement('div');
-                    dLog.style.cssText = 'display:flex; align-items:center; gap:10px; background:var(--bg); padding:10px; border-radius:10px; font-size:13px; font-weight:700; color:var(--text);';
+                    dLog.style.cssText = 'display:flex; align-items:center; gap:12px; background:white; padding:12px; border-radius:12px; font-size:12px; font-weight:700; color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,0.03); border-left:4px solid var(--primary);';
 
                     // Extraer solo la hora de la fecha si es posible o texto corto
                     var timeStr = "";
                     if (log.d) {
                         try {
-                            var tParts = log.d.split(','); // "1/1/2026, 12:00:00" -> ["1/1/2026", " 12:00:00"]
+                            var tParts = String(log.d).split(','); // "1/1/2026, 12:00:00" -> ["1/1/2026", " 12:00:00"]
                             if (tParts.length > 1) {
                                 var hm = tParts[1].trim().split(':'); // ["12", "00", "00"]
                                 timeStr = hm[0] + ":" + hm[1];
                             } else {
-                                timeStr = log.d.split(' ')[0];
+                                timeStr = String(log.d).split(' ')[0];
                             }
                         } catch (e) { }
                     }
 
-                    dLog.innerHTML = '<div style="font-size:18px; line-height:1;">' + log.emoji + '</div>'
-                        + '<div style="flex:1;">' + log.txt + '</div>'
-                        + '<div style="font-size:10px; color:var(--text-muted); font-weight:800;">' + timeStr + '</div>';
+                    // Gamificar las descripciones (hacer nombres bold)
+                    var logText = String(log.txt)
+                        .replace(/([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*)/g, '<span style="color:var(--primary); font-weight:900;">$1</span>')
+                        .replace(/(tomó\slista|movió|actualizó)/g, '<span style="color:#f59e0b; font-style:italic;">$1</span>');
+
+                    dLog.innerHTML = '<div style="font-size:20px; line-height:1; min-width:24px; text-align:center; background:var(--primary-soft); border-radius:50%; padding:6px;">' + log.emoji + '</div>'
+                        + '<div style="flex:1; line-height:1.4;">' + logText + '</div>'
+                        + '<div style="font-size:10px; color:white; background:var(--border); padding:3px 8px; border-radius:10px; font-weight:800;">' + timeStr + '</div>';
                     gridAct.appendChild(dLog);
                 });
                 logContainer.appendChild(gridAct);
@@ -2337,7 +2368,7 @@
                     var avatarHtml = '';
                     if (v.foto) {
                         var vUrl = v.foto.replace('/file/d/', '/uc?export=view&id=').replace('/view?usp=drivesdk', '');
-                        avatarHtml = '<img src="' + vUrl + '" style="width:40px; height:40px; border-radius:50%; object-fit:cover; margin-bottom:8px;">';
+                        avatarHtml = '<img src="' + vUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'40\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>' + v.nombre.charAt(0).toUpperCase() + '</text></svg>\';" style="width:40px; height:40px; border-radius:50%; object-fit:cover; margin-bottom:8px;">';
                     } else {
                         avatarHtml = '<div style="width:40px; height:40px; border-radius:50%; background:var(--primary-soft); color:var(--primary); font-weight:900; display:flex; align-items:center; justify-content:center; margin-bottom:8px; font-size:18px;">' + v.nombre.charAt(0).toUpperCase() + '</div>';
                     }
@@ -2422,6 +2453,34 @@
             };
             r.readAsDataURL(file);
             document.getElementById('comFotoInp').value = '';
+        }
+
+        // --- OCULTAR FOTO COMUNIDAD ---
+        function ocultarComunidadFoto(url) {
+            if(!confirm("¿Estás seguro de ocultar esta foto del muro? No se podrá deshacer.")) return;
+            document.getElementById('comFotoViewer').style.display = 'none';
+            showLoader("Retirando del muro...");
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    tipo: "ocultar_comunidad_foto",
+                    url: url
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                hideLoader();
+                if(res.ok) {
+                    showCustomMessage("Foto Oculta", "La imagen ya no aparecerá en el muro del club.", "var(--success)");
+                    volSyncSistema();
+                } else {
+                    showToast("Error ocultando foto: " + res.error, true);
+                }
+            })
+            .catch(err => {
+                hideLoader();
+                showToast("Error de red: " + err, true);
+            });
         }
 
         // --- SUBIDA DE FOTO PERFIL VOLUNTARIO ---
