@@ -13,19 +13,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-soft: #e0e7ff;
-            --accent: #f59e0b;
-            --success: #10b981;
-            --danger: #ef4444;
-            --bg: #f8fafc;
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-soft: #f1f5f9;
+            --accent: #d97706;
+            --success: #15803d;
+            --danger: #b91c1c;
+            
+            --bg-base: #ffffff;
             --card: #ffffff;
-            --text: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --radius: 20px;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            --text: #111827;
+            --text-muted: #4b5563;
+            --border: #e5e7eb;
+            
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         * {
@@ -37,60 +39,69 @@
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg);
+            background: var(--bg-base);
             color: var(--text);
             line-height: 1.5;
-            overscroll-behavior-y: contain;
-        }
-
-        /* ── LAYOUT ── */
-        header {
-            background: var(--card);
-            padding: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
+            min-height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
+            overflow-x: hidden;
         }
 
+        /* ── RESPONSIVE CONTAINER ── */
         .container {
-            max-width: 500px;
+            width: 100%;
+            max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
-            min-height: calc(100vh - 80px);
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                padding: 40px 20px;
+            }
+        }
+
+        /* ── PREMIUM LAYOUT UTILS ── */
+        .v-centered-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px 0;
+        }
+
+        .premium-backdrop {
+            background: radial-gradient(circle at top right, var(--primary-soft), transparent 40%),
+                        radial-gradient(circle at bottom left, #fff1f2, transparent 40%);
         }
 
         /* ── UI COMPONENTS ── */
         .card {
             background: var(--card);
             border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
-            transition: transform 0.2s;
-        }
-
-        .card:active {
-            transform: scale(0.98);
+            transition: transform 0.1s;
         }
 
         .btn {
             width: 100%;
-            padding: 16px;
-            border-radius: 16px;
+            padding: 14px;
+            border-radius: 10px;
             border: none;
-            font-size: 16px;
-            font-weight: 800;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: all 0.2s;
+            gap: 8px;
         }
 
         .btn-primary {
@@ -98,28 +109,24 @@
             color: white;
         }
 
-        .btn-primary:active {
-            background: var(--primary-dark);
-        }
-
         .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary-soft);
-            color: var(--primary);
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text);
         }
 
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .label {
             display: block;
-            font-size: 13px;
-            font-weight: 800;
+            font-size: 11px;
+            font-weight: 900;
             color: var(--text-muted);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1.5px;
         }
 
         .input {
@@ -227,19 +234,7 @@
 
         .view {
             display: none;
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            width: 100%;
         }
 
         .alert {
@@ -285,12 +280,12 @@
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--primary-soft);
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--primary-soft);
             border-top-color: var(--primary);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
 
         @keyframes spin {
@@ -435,6 +430,267 @@
             background: var(--primary-soft);
         }
 
+        /* ── ATTENDANCE HYBRID SYSTEM ── */
+        .att-choice-card {
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .att-choice-card:active {
+            transform: scale(0.96);
+        }
+
+        .att-choice-card.primary {
+            border-color: var(--primary-soft);
+            background: linear-gradient(to bottom right, #ffffff, #f5f3ff);
+        }
+
+        .att-choice-card.primary:hover {
+            border-color: var(--primary);
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.2);
+        }
+
+        .att-choice-card.warning {
+            border-color: #fef3c7;
+            background: linear-gradient(to bottom right, #ffffff, #fffdf2);
+        }
+
+        .att-choice-card.warning:hover {
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px -5px rgba(245, 158, 11, 0.2);
+        }
+
+        /* Summary Card Styling (Premium) */
+        .summary-card {
+            background: white;
+            border-radius: 24px;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 20px 20px 60px #d1d9e6, -20px -20px 60px #ffffff;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .summary-header {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .summary-body {
+            padding: 25px;
+            background: #fff;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-footer {
+            background: #f8fafc;
+            padding: 20px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .recent-report-pill {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .recent-report-pill:active {
+            background: var(--bg);
+            transform: translateX(5px);
+        }
+
+        /* ── TEAM SELECTION GRID ── */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .team-member-card {
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .team-member-card.selected {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.2);
+        }
+
+        .team-member-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #f1f5f9;        /* ── MURAL DEL CLUB (PREMIUM GALLERY) ── */
+        #comFotoFeed::-webkit-scrollbar { display: none; }
+        
+        .mural-card {
+            flex: 0 0 160px;
+            height: 220px;
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--border);
+            scroll-snap-align: start;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mural-card:active {
+            transform: scale(0.96);
+        }
+
+        .mural-overlay {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            padding: 12px;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.9), transparent);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .mural-badge {
+            position: absolute;
+            top: 10px; right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            color: white;
+            font-weight: 800;
+        }
+            border: 3px solid white;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .member-check-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.2s;
+        }
+
+        .team-member-card.selected .member-check-overlay {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Pending Banner */
+        .pending-resume-banner {
+            background: #fffbeb;
+            border: 2px solid #fef3c7;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        /* Selector de Equipo Cohesivo */
+        .team-grid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 0 5px;
+        }
+
+        .team-counter-badge {
+            background: var(--primary);
+            color: white;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 4px 12px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(99,102,241,0.3);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .team-counter-badge.empty {
+            background: var(--border);
+            color: var(--text-muted);
+            box-shadow: none;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -477,33 +733,32 @@
     <div class="container" id="mainCont">
 
         <!-- ── PORTAL DE ENTRADA ── -->
-        <div class="view active" id="v-portal">
-            <h2 style="font-weight:900; margin-bottom:24px; font-size:28px; line-height:1.1;">Mi Club 2026<br><span
-                    style="color:var(--primary); font-size:20px;">Juan Montalvo - Children International</span></h2>
+        <div class="view active v-centered-view" id="v-portal" style="padding: 40px 10px;">
+            <div style="text-align:center; margin-bottom:48px;">
+                <h1 style="font-size:32px; font-weight:900; color:var(--text); letter-spacing:-1px; margin-bottom:8px;">Club Juan Montalvo</h1>
+                <p style="font-size:15px; color:var(--text-muted); font-weight:700;">Selecciona tu perfil de acceso</p>
+            </div>
+            
+            <div style="display:grid; gap:12px;">
+                <div class="card" onclick="navTo('familias')" style="cursor:pointer; display:flex; align-items:center; gap:16px; padding:20px; border:1px solid #ddd;">
+                    <div style="font-size:28px;">🏘️</div>
+                    <div style="flex:1;">
+                        <h3 style="font-weight:900; font-size:18px; color:var(--text);">Soy Familia</h3>
+                        <p style="font-size:13px; color:var(--text-muted); font-weight:600;">Pagos, horarios y mingas</p>
+                    </div>
+                </div>
 
-            <p style="font-weight:700; color:var(--text-muted); margin-bottom:20px; font-size:14px;">Selecciona tu
-                perfil para continuar:</p>
-
-            <div class="card" onclick="navTo('familias')">
-                <div style="display:flex; align-items:center; gap:20px;">
-                    <div style="font-size:32px;">👨‍👩‍👧‍👦</div>
-                    <div>
-                        <h3 style="font-weight:900;">Soy una Familia</h3>
-                        <p style="font-size:13px; color:var(--text-muted); font-weight:700;">Consultar horarios, cambios
-                            y mingas</p>
+                <div class="card" onclick="navTo('voluntarios')" style="cursor:pointer; display:flex; align-items:center; gap:16px; padding:20px; border:2px solid var(--primary); background:var(--primary-soft);">
+                    <div style="font-size:28px;">🛡️</div>
+                    <div style="flex:1;">
+                        <h3 style="font-weight:900; font-size:18px; color:var(--primary);">Voluntariado</h3>
+                        <p style="font-size:13px; color:var(--primary-dark); font-weight:600;">Asistencia y gestión de grupos</p>
                     </div>
                 </div>
             </div>
-
-            <div class="card" onclick="navTo('voluntarios')">
-                <div style="display:flex; align-items:center; gap:20px;">
-                    <div style="font-size:32px;">🧤</div>
-                    <div>
-                        <h3 style="font-weight:900;">Voluntariado</h3>
-                        <p style="font-size:13px; color:var(--text-muted); font-weight:700;">Voluntarios y Coordinadores
-                        </p>
-                    </div>
-                </div>
+            
+            <div style="margin-top:60px; text-align:center; border-top:1px solid var(--border); padding-top:20px;">
+                <p style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; opacity:0.6;">Protocolo de Seguridad CI</p>
             </div>
         </div>
 
@@ -812,28 +1067,37 @@
         <!-- ── MÓDULOS (VOLUNTARIOS) ── -->
         <div id="module-voluntarios">
             <!-- VOL-LOGIN -->
-            <div class="view" id="v-vol-login">
-                <div class="card">
+            <div class="view v-centered-view" id="v-vol-login">
+                <div style="text-align:center; margin-bottom:40px;">
+                    <div style="font-size:48px; margin-bottom:20px; filter:drop-shadow(0 10px 15px var(--primary-glow));">⚡</div>
+                    <h2 style="font-weight:900; font-size:28px; letter-spacing:-1px;">Acceso Voluntariado</h2>
+                    <p style="font-size:14px; color:var(--text-muted); font-weight:700; margin-top:8px;">Protocolo de seguridad CI activo</p>
+                </div>
+                
+                <div class="card" style="padding:32px; border-top:6px solid var(--primary);">
                     <div class="input-group">
                         <label class="label">Tú primer nombre</label>
-                        <input type="text" id="volLoginName" class="input" placeholder="Ej: Maria">
+                        <input type="text" id="volLoginName" class="input" placeholder="Ej: Maria" style="border-radius:18px; padding:18px;">
                     </div>
                     <div class="input-group">
                         <label class="label">Últimos 4 dígitos cédula</label>
-                        <input type="password" id="volLoginPass" class="input" placeholder="xxxx">
+                        <input type="password" id="volLoginPass" class="input" placeholder="xxxx" style="border-radius:18px; padding:18px;">
                     </div>
-                    <button class="btn btn-primary" onclick="volDoLogin()">Entrar al Panel</button>
+                    <button class="btn btn-primary" onclick="volDoLogin()" style="padding:20px; font-size:17px;">Desbloquear Panel Pro</button>
                 </div>
+                
+                <button class="btn btn-outline" onclick="goHome()" style="margin-top:20px; border:none; background:none; font-size:14px; font-weight:900; opacity:0.6; color:var(--text);">← Cancelar y salir</button>
             </div>
 
             <!-- VOL-REGISTRO-PRIMERA-VEZ -->
-            <div class="view" id="v-vol-registro">
-                <div class="alert alert-warn">
-                    <span>⚠️</span>
-                    <div><b>¡Hola <span id="volRegName"></span>!</b> Este es tu primer inicio de sesión. Por seguridad,
-                        debes completar tus datos reales.</div>
+            <div class="view v-centered-view" id="v-vol-registro">
+                <div style="text-align:center; margin-bottom:25px;">
+                    <div style="font-size:32px; background:var(--primary-soft); width:64px; height:64px; border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 15px;">👋</div>
+                    <h2 style="font-weight:900; font-size:22px;">¡Bienvenido/a, <span id="volRegName" style="color:var(--primary);">...</span>!</h2>
+                    <p style="font-size:14px; color:var(--text-muted); font-weight:700; margin-top:5px;">Para tu seguridad, completa tu perfil oficial de voluntariado.</p>
                 </div>
-                <div class="card">
+                
+                <div class="card" style="box-shadow:var(--shadow-lg); border-top:4px solid var(--primary);">
                     <div class="input-group">
                         <label class="label">Tu Cédula Real (10 dígitos)</label>
                         <input type="tel" id="volRegCedInp" class="input" placeholder="Ej: 0987654321" maxlength="10">
@@ -842,56 +1106,46 @@
                         <label class="label">Fecha de Nacimiento</label>
                         <input type="date" id="volRegNacInp" class="input">
                     </div>
-                    <button class="btn btn-primary" onclick="volCompletarRegistro()">Guardar y Entrar</button>
+                    <button class="btn btn-primary" onclick="volCompletarRegistro()">Completar Perfil Premium</button>
                 </div>
+                <p style="text-align:center; font-size:11px; font-weight:700; color:var(--text-muted); opacity:0.8;">Tus datos están protegidos por la política de CI.</p>
             </div>
 
             <!-- VOL-DASHBOARD -->
             <div class="view" id="v-vol-dash">
-                <div style="margin-bottom:20px; display:flex; align-items:center; gap:15px;">
-                    <div style="position:relative; width:65px; height:65px; flex-shrink:0;">
-                        <img id="volProfileImg" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'12\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>Sin Foto</text></svg>';" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><rect width='100%' height='100%' fill='#cbd5e1'/></svg>" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:3px solid var(--primary); cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);" onclick="document.getElementById('volProfileInp').click()">
-                        <div style="position:absolute; bottom:0; right:0; background:white; border-radius:50%; padding:4px; box-shadow:0 2px 5px rgba(0,0,0,0.2); font-size:12px; cursor:pointer;" onclick="document.getElementById('volProfileInp').click()">✏️</div>
+                <!-- Header horizontal limpio -->
+                <div class="card" style="display:flex; align-items:center; gap:16px; padding:16px; margin-bottom:20px; border-bottom:4px solid var(--primary); border-radius:12px;">
+                    <div style="width:60px; height:60px; flex-shrink:0; position:relative;">
+                        <img id="volProfileImg" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=V&background=2563eb&color=fff';" src="https://ui-avatars.com/api/?name=V&background=2563eb&color=fff" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #ddd; cursor:pointer;" onclick="document.getElementById('volProfileInp').click()">
+                        <div style="position:absolute; bottom:0; right:0; background:white; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid #ddd;">📸</div>
                     </div>
-                    <input type="file" id="volProfileInp" accept="image/*" style="display:none" onchange="uploadVolProfile(event)">
                     <div>
-                        <h2 style="font-weight:900; line-height:1.2;">Hola, <span id="volName" style="color:var(--primary);">---</span></h2>
-                        <p style="font-size:13px; font-weight:700; color:var(--text-muted); margin-top:2px;">Estás asignado/a a <span id="volGroupCount">0</span> grupos.</p>
+                        <div style="font-size:10px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:1px;">Bienvenido/a</div>
+                        <h2 style="font-weight:900; font-size:18px; line-height:1.2;">Hola, <span id="volName">---</span></h2>
+                        <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-top:2px;" id="volGroupCount">0 Grupos asignados</div>
                     </div>
                 </div>
-                <div id="volGroupsList" style="display:grid; gap:12px;"></div>
+                
+                <input type="file" id="volProfileInp" accept="image/*" style="display:none" onchange="uploadVolProfile(event)">
+                
+                <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px; padding-left:4px;">Mis Grupos CI</div>
+                <div id="volGroupsList" style="display:grid; gap:10px;"></div>
             </div>
 
             <!-- VOL-ATTENDANCE -->
             <div class="view" id="v-vol-attendance">
-                <!-- Header contador + guardar -->
-                <div
-                    style="background:var(--primary); color:white; padding:20px; border-radius:var(--radius); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+                <!-- Header compacto -->
+                <div style="background:var(--text); color:white; padding:16px; border-radius:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div style="font-size:11px; font-weight:800; opacity:0.8;">NIÑOS PRESENTES</div>
-                        <div style="font-size:32px; font-weight:900;" id="attCounter">0</div>
+                        <div style="font-size:28px; font-weight:900;" id="attCounter">0</div>
                     </div>
-                    <button class="btn btn-primary"
-                        style="background:white; color:var(--primary); width:auto; padding:10px 20px;"
-                        onclick="volSaveAttendance()">Guardar ✅</button>
+                    <button class="btn btn-primary" style="background:#22c55e; width:auto; padding:8px 24px;" onclick="volSaveAttendance()">Guardar ✅</button>
                 </div>
                 <!-- Panel de voluntarios presentes -->
-                <div
-                    style="background:#f8fafc; border:1.5px solid var(--border); border-radius:16px; padding:14px; margin-bottom:16px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                        <div
-                            style="font-size:12px; font-weight:900; color:var(--text-muted); text-transform:uppercase;">
-                            &#x1F9E4; Voluntarios presentes</div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <button onclick="volOpenWhoWasHereModal()" 
-                                style="background:var(--primary); color:white; border:none; border-radius:10px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(99,102,241,0.2);">
-                                👤 ¿Quiénes vinieron hoy?
-                            </button>
-                            <span id="attVolCount"
-                                style="font-size:11px; font-weight:800; background:var(--primary-soft); color:var(--primary); padding:2px 8px; border-radius:20px;">0</span>
-                        </div>
-                    </div>
-                    <div id="attVolList" style="display:grid; gap:8px;"></div>
+                <div id="attTeamGridContainer" style="margin-bottom:16px;">
+                    <!-- El grid de fotos unificado se inyecta aquí -->
+                    <div id="attVolList"></div>
                 </div>
                 <!-- Buscador de participantes (Sticky) -->
                 <div style="display:flex;gap:8px;padding:12px 0;margin-bottom:12px;background:rgba(255,255,255,0.95);position:sticky;top:0;z-index:10;backdrop-filter:blur(10px);">
@@ -1052,17 +1306,74 @@
             </div>
         </div>
 
+        <!-- ATTENDANCE CHOICE VIEW -->
+        <div class="view" id="v-vol-att-choice">
+            <div style="margin-bottom:24px;">
+                <h2 style="font-weight:900; line-height:1.2;">¿Cómo reportarás la asistencia de hoy?</h2>
+                <p style="color:var(--text-muted); font-weight:700; font-size:14px; margin-top:5px;" id="choiceSub"></p>
+            </div>
+
+            <div style="display:grid; gap:16px;">
+                <div class="att-choice-card primary" onclick="volProceedOfficial()">
+                    <div style="font-size:40px;">🚀</div>
+                    <div style="font-weight:900; font-size:18px;">Sistema Oficial de Children</div>
+                    <p style="font-size:12px; font-weight:700; color:var(--text-muted);">Usa esta vía si tienes el acceso externo. No requiere marcar nombres en esta app.</p>
+                </div>
+
+                <div class="att-choice-card warning" onclick="volProceedManual()">
+                    <div style="font-size:40px;">⚠️</div>
+                    <div style="font-weight:900; font-size:18px;">Registro de Emergencia / Respaldo</div>
+                    <p style="font-size:12px; font-weight:700; color:var(--text-muted);">Usa esta vía si el encargado oficial no asistió. Podrás generar una imagen de respaldo.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ATTENDANCE SUMMARY VIEW (THE CARD) -->
+        <div class="view" id="v-vol-att-resumen">
+            <div id="resumenContent" style="margin-bottom:30px;">
+                <!-- Summary Card goes here -->
+            </div>
+            
+            <div style="display:grid; gap:10px;">
+                <button class="btn btn-primary" onclick="shareSummaryWhatsApp()">
+                    <span>📱</span> Compartir por WhatsApp
+                </button>
+                <button class="btn btn-outline" onclick="goHome()">
+                    🏠 Volver al Inicio
+                </button>
+            </div>
+            <p style="text-align:center; font-size:12px; color:var(--text-muted); font-weight:700; margin-top:20px; padding:0 20px;">
+                💡 Toma una captura de pantalla (pantallazo) a la tarjeta superior para guardarla como imagen.
+            </p>
+        </div>
+
+        <!-- ATTENDANCE OFFICIAL CONFIRM VIEW -->
+        <div class="view" id="v-vol-att-confirm-team">
+            <div style="margin-bottom:24px;">
+                <h2 style="font-weight:900; line-height:1.2;">¿Ya terminaste en el portal oficial?</h2>
+                <p style="color:var(--text-muted); font-weight:700; font-size:14px; margin-top:5px;">Selecciona quiénes de la dupla/equipo estuvieron hoy:</p>
+            </div>
+
+            <div id="attTeamList" style="display:grid; gap:10px; margin-bottom:25px;">
+                <!-- Lista de voluntarios se carga aquí -->
+            </div>
+
+            <button class="btn btn-primary" onclick="volSaveOfficialCompletion()">
+                ✅ Confirmar Finalización
+            </button>
+            <button class="btn btn-outline" onclick="goHome()" style="margin-top:10px;">
+                Cancelar
+            </button>
+        </div>
+
         <!-- SUCCESS VIEW -->
-        <div class="view" id="v-success">
-            <div style="text-align:center; padding:40px 20px;">
-                <div
-                    style="width:80px; height:80px; border-radius:50%; background:#dcfce7; color:#059669; display:flex; align-items:center; justify-content:center; font-size:40px; margin:0 auto 20px;">
-                    ✓</div>
-                <h2 id="successTitle" style="font-weight:900; margin-bottom:10px;">¡Completado!</h2>
-                <p id="successMsg" style="color:var(--text-muted); font-weight:700; margin-bottom:30px;">Tu solicitud ha
-                    sido procesada correctamente.</p>
-                <div id="successExtraBtns" style="display:grid; gap:10px; margin-bottom:12px;"></div>
-                <button class="btn btn-primary" onclick="goHome()">Volver al Inicio</button>
+        <div class="view v-centered-view" id="v-success" style="padding:40px 20px;">
+            <div style="text-align:center;">
+                <div style="font-size:64px; margin-bottom:20px;">✅</div>
+                <h2 id="successTitle" style="font-weight:900; font-size:28px; margin-bottom:12px; color:var(--text);">Operación Exitosa</h2>
+                <p id="successMsg" style="color:var(--text-muted); font-weight:700; font-size:16px; margin-bottom:40px;">Procesado correctamente.</p>
+                <div id="successExtraBtns" style="display:grid; gap:12px; margin-bottom:24px;"></div>
+                <button class="btn btn-primary" onclick="goHome()" style="background:var(--text); color:white;">Volver al Inicio</button>
             </div>
         </div>
 
@@ -1152,11 +1463,12 @@
         function vibe(type) {
             if (!navigator.vibrate) return;
             switch(type) {
-                case 'TICK': navigator.vibrate(15); break;       // Selecciones suaves
-                case 'CLICK': navigator.vibrate(35); break;      // Botones principales
-                case 'SUCCESS': navigator.vibrate(100); break;   // Acción completada
-                case 'ERROR': navigator.vibrate([50, 80, 50]); break; // Alerta/Error
-                case 'MAGIC': navigator.vibrate([100, 50, 100, 50, 200]); break; // Gamificación
+                case 'TICK': navigator.vibrate(12); break;       // Tacto premium ligero
+                case 'CLICK': navigator.vibrate(25); break;      // Botones estándar
+                case 'STRONG': navigator.vibrate([40, 30, 40]); break; // Pulso doble (Dupla)
+                case 'SUCCESS': navigator.vibrate([100, 50, 100]); break; // Éxito profundo
+                case 'ERROR': navigator.vibrate([50, 80, 50]); break; 
+                case 'MAGIC': navigator.vibrate([60, 40, 60, 40, 100]); break; // Gamificación
             }
         }
 
@@ -1268,11 +1580,27 @@
                     APP_DB = d;
                     if (d.pps_config) PPS_MAP = d.pps_config;
 
-                    // Asegurar que voluntarios siempre sea array
+                    // --- Sincronización en la Nube de Reportes ---
+                    if (d.asistencia_metrics && d.asistencia_metrics.historial_global && USER) {
+                        var serverHistory = d.asistencia_metrics.historial_global.filter(h => h.voluntario === USER.nombre);
+                        
+                        // Unir con locales evitando duplicados (mismo grupo y fecha)
+                        serverHistory.forEach(sRep => {
+                            var exists = RECENT_REPORTS.some(lRep => lRep.grupo === sRep.grupo && lRep.fecha === sRep.fecha);
+                            if (!exists) {
+                                RECENT_REPORTS.unshift(sRep);
+                            }
+                        });
+                        // Limitar a los 15 más recientes y guardar
+                        RECENT_REPORTS = RECENT_REPORTS.slice(0, 15);
+                        localStorage.setItem('RECENT_REPORTS', JSON.stringify(RECENT_REPORTS));
+                    }
+
                     if (!APP_DB.voluntarios) APP_DB.voluntarios = [];
                     document.getElementById('syncDot').classList.add('online');
                     document.getElementById('syncText').textContent = 'Sincronizado';
                 } else {
+                    document.getElementById('syncDot').classList.remove('online');
                     document.getElementById('syncText').textContent = 'Sin conexión';
                 }
             };
@@ -2194,54 +2522,47 @@
             // ── Renderizar Top 10 Fotos de Comunidad ──
             var comDiv = document.createElement('div');
             comDiv.style.cssText = 'margin-bottom:20px;';
-            comDiv.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">'
-                + '<div style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase;">📸 Muro del Club</div>'
-                + '<button onclick="document.getElementById(\'comFotoInp\').click()" style="background:#10b981; color:white; border:none; border-radius:12px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer; box-shadow:0 2px 5px rgba(16,185,129,0.3);">+ Subir Foto</button>'
-                + '</div>'
-                + '<input type="file" id="comFotoInp" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">'
-                + '<div style="display:flex; gap:12px; overflow-x:auto; padding:5px 20px 20px 20px; height:205px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; scroll-padding:20px; margin-left:-20px; margin-right:-20px;" id="comFotoFeed"></div>';
+            comDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:0 5px;">
+                    <div style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase; letter-spacing:1px;">📸 Muro del Club</div>
+                    <button onclick="document.getElementById('comFotoInp').click()" style="background:var(--primary); color:white; border:none; border-radius:12px; padding:8px 16px; font-size:11px; font-weight:900; cursor:pointer; box-shadow:var(--shadow-sm);">+ Subir Recuerdo</button>
+                </div>
+                <input type="file" id="comFotoInp" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">
+                <div style="display:flex; gap:12px; overflow-x:auto; padding:5px 20px 25px 20px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; margin-left:-20px; margin-right:-20px;" id="comFotoFeed"></div>
+            `;
             list.appendChild(comDiv);
 
             setTimeout(() => {
                 var feed = comDiv.querySelector('#comFotoFeed');
                 if (APP_DB.comunidad_fotos && APP_DB.comunidad_fotos.length > 0) {
-                    // Tomar solo las últimas 10
-                    var diezFotos = APP_DB.comunidad_fotos.slice(-10).reverse();
+                    var diezFotos = APP_DB.comunidad_fotos.slice(-12).reverse(); // Subimos a 12 para más variedad
                     diezFotos.forEach(function(cf) {
                         var fileIdmatch = cf.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         var parsedId = fileIdmatch ? fileIdmatch[1] : '';
-                        var cUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w1000' : '';
+                        var cUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w600' : '';
                         
                         var card = document.createElement('div');
-                        card.style.cssText = 'scroll-snap-align:center; min-width:85%; width:85%; height:180px; border-radius:16px; overflow:hidden; border:2px solid var(--border); position:relative; background: #e2e8f0; flex-shrink:0; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.08); transition:transform 0.3s;';
+                        card.className = 'mural-card';
                         card.onclick = function() {
-                            var imgModal = document.getElementById('comFotoViewer');
-                            if (!imgModal) {
-                                imgModal = document.createElement('div');
-                                imgModal.id = 'comFotoViewer';
-                                imgModal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; display:none; align-items:center; justify-content:center; flex-direction:column;';
-                                imgModal.onclick = function() { this.style.display = 'none'; };
-                                document.body.appendChild(imgModal);
-                            }
-                            
-                            var isOwner = (USER && USER.nombre === cf.vol);
-                            var isAdmin = (USER && (USER.rol === 'admin' || USER.rol === 'coordinador'));
-                            var hideBtn = '';
-                            if(isOwner || isAdmin) {
-                                hideBtn = '<button onclick="event.stopPropagation(); ocultarComunidadFoto(\'' + cf.url + '\')" style="margin-top:20px; background:#ef4444; color:white; border:none; border-radius:8px; padding:10px 20px; font-weight:800; cursor:pointer;">🗑️ Ocultar del Muro</button>';
-                            }
-
-                            imgModal.innerHTML = '<img src="' + cUrl + '" style="max-width:90%; max-height:70vh; border-radius:12px; object-fit:contain; box-shadow:0 10px 30px rgba(0,0,0,0.5);">'
-                                + '<div style="color:white; font-size:14px; font-weight:800; margin-top:15px; text-align:center;">' + cf.vol + ' <br> <span style="font-weight:400; font-size:11px; opacity:0.7;">' + cf.grupo + ' · ' + cf.fecha + '</span></div>'
+                            vibe('CLICK');
+                            var imgModal = document.getElementById('fullImgModal');
+                            var hideBtn = '<div onclick="document.getElementById(\'fullImgModal\').style.display=\'none\'" style="margin-top:20px; background:rgba(255,255,255,0.2); color:white; padding:12px 24px; border-radius:12px; font-size:14px; font-weight:900; cursor:pointer;">Cerrar</div>';
+                            imgModal.innerHTML = '<div style="max-width:90%; animation:popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; flex-direction:column; align-items:center;">'
+                                + '<img src="' + cUrl + '" style="width:100%; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">'
+                                + '<div style="color:white; font-size:15px; font-weight:900; margin-top:15px; text-align:center; text-shadow:0 2px 4px rgba(0,0,0,0.3);">' + cf.vol + ' <br> <span style="font-weight:600; font-size:12px; opacity:0.8;">' + cf.grupo + ' · ' + cf.fecha + '</span></div>'
                                 + hideBtn
-                                + '<div style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.2); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:20px; cursor:pointer;">✕</div>';
+                                + '</div>';
                             imgModal.style.display = 'flex';
                         };
-                        card.innerHTML = '<img src="' + cUrl + '" onerror="this.onerror=null; this.src=\'data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 100 100\\\'><rect width=\\\'100%\\\' height=\\\'100%\\\' fill=\\\'%23cbd5e1\\\'/><text x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'10\\\' font-weight=\\\'bold\\\' fill=\\\'white\\\' dominant-baseline=\\\'central\\\' text-anchor=\\\'middle\\\'>Sin Foto</text></svg>\';" style="width:100%; height:100%; object-fit:cover;">'
-                        + '<div style="position:absolute; bottom:0; left:0; width:100%; padding:12px; display:flex; flex-direction:column; background:linear-gradient(to top, rgba(0,0,0,0.7), transparent);">'
-                        + '<span style="color:white; font-size:12px; font-weight:900;">' + String(cf.vol) + '</span>'
-                        + '<span style="color:rgba(255,255,255,0.8); font-size:10px; font-weight:700;">' + String(cf.grupo) + '</span>'
-                        + '</div>';
+
+                        card.innerHTML = `
+                            <img src="${cUrl}" style="width:100%; height:100%; object-fit:cover;">
+                            <div class="mural-badge">MEMORIA</div>
+                            <div class="mural-overlay">
+                                <span style="font-size:13px; font-weight:900; color:white;">${cf.vol.split(' ')[0]}</span>
+                                <span style="font-size:10px; font-weight:600; color:rgba(255,255,255,0.7);">${cf.grupo}</span>
+                            </div>
+                        `;
                         feed.appendChild(card);
                     });
                 } else {
@@ -2252,83 +2573,117 @@
                 }
             }, 0);
 
+            // ── Banner de Reporte Pendiente (Resiliencia) ──
+            var draft = localStorage.getItem('DRAFT_ATT');
+            if (draft) {
+                try {
+                    var dObj = JSON.parse(draft);
+                    var banner = document.createElement('div');
+                    banner.className = 'pending-resume-banner';
+                    banner.innerHTML = `
+                        <div style="font-size:24px;">⚠️</div>
+                        <div style="flex:1;" onclick="resumeDraft()">
+                            <div style="font-weight:900; font-size:14px; color:#92400e;">Reporte interrumpido</div>
+                            <div style="font-size:11px; font-weight:700; color:#b45309;">Tienes un registro de <b>${dObj.grupo}</b> pendiente. Toca aquí para recuperarlo.</div>
+                        </div>
+                        <div onclick="event.stopPropagation(); if(confirm('¿Descartar este borrador?')) { localStorage.removeItem('DRAFT_ATT'); showVolDashboard(); }" 
+                             style="padding:10px; font-size:18px; color:#b45309; cursor:pointer; opacity:0.6;">✕</div>
+                    `;
+
+                    // Mover el onclick principal a una función interna para evitar conflictos con el botón de cerrar
+                    window.resumeDraft = function() {
+                        ATT_STATE = dObj;
+                        if (ATT_STATE.mode === 'official') {
+                            renderTeamSelector('attTeamList', ATT_STATE.grupo);
+                            showView('v-vol-att-confirm-team', ATT_STATE.grupo, 'Continuar Reporte', true, () => startAttendance(ATT_STATE.grupo));
+                        } else {
+                            volProceedManual();
+                        }
+                    };
+                    banner.innerHTML = `
+                        <div style="font-size:24px;">⚠️</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:900; font-size:14px; color:#92400e;">Reporte interrumpido</div>
+                            <div style="font-size:11px; font-weight:700; color:#b45309;">Tienes un registro de <b>${dObj.grupo}</b> pendiente. Toca aquí para recuperarlo.</div>
+                        </div>
+                        <div style="font-size:18px; color:#b45309;">❯</div>
+                    `;
+                    list.appendChild(banner);
+                } catch(e) {}
+            }
+
             if (gruposUser.length > 0) {
                 var centralBox = document.createElement('div');
-                centralBox.style.cssText = 'margin-bottom:20px;';
+                centralBox.className = 'card';
+                centralBox.style.padding = '0';
+                centralBox.style.overflow = 'hidden';
+                centralBox.style.marginBottom = '20px';
                 
-                var btnTomarAsistencia = '<button onclick="document.getElementById(\'modalGruposAsignados\').style.display = \'flex\';" style="width:100%; background:var(--primary); color:white; border:none; padding:16px; border-radius:16px; font-weight:900; font-size:16px; cursor:pointer; box-shadow:0 4px 15px rgba(59,130,246,0.3); display:flex; justify-content:center; align-items:center; gap:8px;">✅ Tomar Asistencia ('+ gruposUser.length +')</button>';
-
-                var groupsHtml = '<div id="modalGruposAsignados" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; align-items:center; justify-content:center; padding:20px;">'
-                    + '<div style="background:white; border-radius:20px; width:100%; max-width:450px; padding:20px; box-shadow:0 10px 40px rgba(0,0,0,0.2); max-height:80vh; display:flex; flex-direction:column;">'
-                    + '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">'
-                    + '<div style="font-weight:900; font-size:18px;">✅ Tomar Asistencia</div>'
-                    + '<button onclick="document.getElementById(\'modalGruposAsignados\').style.display=\'none\'" style="background:#f8fafc; border:none; border-radius:50%; width:30px; height:30px; font-weight:900; cursor:pointer;">✕</button>'
-                    + '</div>'
-                    + '<div style="display:grid; gap:10px; overflow-y:auto; padding-right:5px; -webkit-overflow-scrolling:touch;">';
+                var btnTomarAsistencia = `
+                    <div style="padding:20px 16px; background:linear-gradient(135deg, var(--primary), #4f46e5); color:white; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:900; font-size:16px;">Toma de Asistencia</div>
+                            <div style="font-size:11px; font-weight:700; opacity:0.9;">Selecciona tu grupo programado</div>
+                        </div>
+                        <div style="font-size:24px;">📋</div>
+                    </div>
+                `;
                 
+                var groupsHtml = '<div style="padding:12px; display:grid; gap:12px;">';
                 gruposUser.forEach(function(gNom) {
                     var ninos = APP_DB.participantes.filter(function (p) { return p.g === gNom; });
-                    
-                    groupsHtml += '<div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid var(--border);">'
-                        + '   <div><div style="font-weight:900; font-size:15px; color:var(--primary);">' + gNom + '</div><div style="font-size:11px; color:var(--text-muted); font-weight:700;">' + ninos.length + ' niños asignados</div></div>'
-                        + '   <button onclick="document.getElementById(\'modalGruposAsignados\').style.display=\'none\'; startAttendance(\'' + gNom + '\');" style="background:var(--primary);color:white;border:none;border-radius:10px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;">Ingresar</button>'
-                        + '</div>';
+                    groupsHtml += `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:15px; border-radius:16px; border:1px solid var(--border);">
+                            <div>
+                                <div style="font-weight:900; font-size:15px; color:var(--primary);">${gNom}</div>
+                                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">${ninos.length} niños asignados</div>
+                            </div>
+                            <button onclick="startAttendance('${gNom}')" style="background:var(--primary); color:white; border:none; border-radius:12px; padding:10px 20px; font-size:13px; font-weight:800; cursor:pointer;">Ingresar</button>
+                        </div>
+                    `;
                 });
-                groupsHtml += '</div></div></div>';
+                groupsHtml += '</div>';
                 
                 centralBox.innerHTML = btnTomarAsistencia + groupsHtml;
                 list.appendChild(centralBox);
             }
 
-            // ── Renderizar Activity Log (Gamificación) ──
-            if (APP_DB.activity_log && APP_DB.activity_log.length > 0) {
-                var logContainer = document.createElement('div');
-                logContainer.style.cssText = 'margin-top:20px; padding-top:20px; border-top:2px dashed var(--border);';
-                logContainer.innerHTML = '<div style="font-size:12px; font-weight:900; color:var(--text-muted); margin-bottom:12px; text-transform:uppercase;">⚡ Actividad Reciente del Club</div>';
-
-                var gridAct = document.createElement('div');
-                gridAct.style.cssText = 'display:grid; gap:8px;';
-
-                // Revertir o sortear (ya vienen ordenados desde el backend, newest last, asi que lo revertimos)
-                var logsReversed = APP_DB.activity_log.slice().reverse();
-
-                logsReversed.forEach(function (log) {
-                    var dLog = document.createElement('div');
-                    dLog.style.cssText = 'display:flex; align-items:center; gap:12px; background:white; padding:12px; border-radius:12px; font-size:12px; font-weight:700; color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,0.03); border-left:4px solid var(--primary);';
-
-                    // Extraer solo la hora de la fecha si es posible o texto corto
-                    var timeStr = "";
-                    if (log.d) {
-                        try {
-                            var tParts = String(log.d).split(','); // "1/1/2026, 12:00:00" -> ["1/1/2026", " 12:00:00"]
-                            if (tParts.length > 1) {
-                                var hm = tParts[1].trim().split(':'); // ["12", "00", "00"]
-                                timeStr = hm[0] + ":" + hm[1];
-                            } else {
-                                timeStr = String(log.d).split(' ')[0];
-                            }
-                        } catch (e) { }
-                    }
-
-                    // Gamificar las descripciones (hacer nombres bold)
-                    var logText = String(log.txt)
-                        .replace(/([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*)/g, '<span style="color:var(--primary); font-weight:900;">$1</span>')
-                        .replace(/(tomó\slista|movió|actualizó)/g, '<span style="color:#f59e0b; font-style:italic;">$1</span>');
-
-                    dLog.innerHTML = '<div style="font-size:20px; line-height:1; min-width:24px; text-align:center; background:var(--primary-soft); border-radius:50%; padding:6px;">' + log.emoji + '</div>'
-                        + '<div style="flex:1; line-height:1.4;">' + logText + '</div>'
-                        + '<div style="font-size:10px; color:white; background:var(--border); padding:3px 8px; border-radius:10px; font-weight:800;">' + timeStr + '</div>';
-                    gridAct.appendChild(dLog);
+            // ── Renderizar Reportes Recientes (Respaldo Manual / Historial Nube) ──
+            if (RECENT_REPORTS && RECENT_REPORTS.length > 0) {
+                var repContainer = document.createElement('div');
+                repContainer.style.cssText = 'margin-top:25px;';
+                repContainer.innerHTML = '<div style="font-size:12px; font-weight:900; color:var(--text-muted); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">📁 Historial de Evidencias</div>';
+                
+                RECENT_REPORTS.forEach((rep, idx) => {
+                    var pill = document.createElement('div');
+                    pill.className = 'recent-report-pill';
+                    pill.onclick = function() {
+                        vibe('CLICK');
+                        renderSummaryCard(rep);
+                        showView('v-vol-att-resumen', rep.grupo, 'Respaldo Recuperado', true, showVolDashboard);
+                    };
+                    pill.innerHTML = `
+                        <div style="width:40px; height:40px; background:var(--primary-soft); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;">🖼️</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:900; font-size:14px; color:var(--primary);">${rep.grupo}</div>
+                            <div style="font-size:11px; font-weight:700; color:var(--text-muted);">${rep.fecha} · ${rep.asistentes.length} presentes</div>
+                        </div>
+                        <div style="font-size:16px; color:var(--border);">❯</div>
+                    `;
+                    repContainer.appendChild(pill);
                 });
-                logContainer.appendChild(gridAct);
-                list.appendChild(logContainer);
+                list.appendChild(repContainer);
             }
-            showView('v-vol-dash', 'Mi Panel', USER.nombre, true, goHome);
+
+            showView('v-vol-dash', 'Gestión Club', USER.nombre, true, goHome);
         }
 
-        var ATT_STATE = { grupo: null, presentes: {}, voluntariosPresentes: {} };
+        var ATT_STATE = { grupo: null, presentes: {}, voluntariosPresentes: {}, mode: 'manual' };
+        var RECENT_REPORTS = JSON.parse(localStorage.getItem('RECENT_REPORTS') || '[]');
+
         function startAttendance(g) {
-            ATT_STATE = { grupo: g, presentes: {}, voluntariosPresentes: {} };
+            ATT_STATE = { grupo: g, presentes: {}, voluntariosPresentes: {}, mode: 'manual' };
+            localStorage.setItem('DRAFT_ATT', JSON.stringify(ATT_STATE));
             
             // Limpiar buscador para evitar persistencia rara
             var sInp = document.getElementById('attSearchInp');
@@ -2336,68 +2691,234 @@
             var sRes = document.getElementById('attCrossResults');
             if (sRes) { sRes.innerHTML = ''; sRes.style.display = 'none'; }
 
+            var sub = document.getElementById('choiceSub');
+            if (sub) sub.textContent = 'Grupo: ' + g;
+
+            showView('v-vol-att-choice', g, 'Opciones de Reporte', true, showVolDashboard);
+        }
+
+        function volProceedOfficial() {
+            vibe('CLICK');
+            var g = ATT_STATE.grupo;
+            ATT_STATE.mode = 'official';
+            var link = (APP_DB.pps_config && APP_DB.pps_config.LINK_OFICIAL) ? APP_DB.pps_config.LINK_OFICIAL : 'https://participation.children.org/';
+            
+            // 1. Guardar Borrador (Resiliencia)
+            localStorage.setItem('DRAFT_ATT', JSON.stringify(ATT_STATE));
+
+            // 2. Abrir link
+            window.open(link, '_blank');
+
+            // 3. Preparar pantalla de confirmación de equipo
+            ATT_STATE.voluntariosPresentes = {};
+            if (USER) ATT_STATE.voluntariosPresentes[USER.nombre] = true;
+
+            renderTeamSelector('attTeamList', g);
+            showView('v-vol-att-confirm-team', g, 'Confirmar Finalización', true, () => startAttendance(g));
+        }
+
+        function renderTeamSelector(containerId, g) {
+            var cont = document.getElementById(containerId);
+            if (!cont) return;
+            
+            // 1. Crear estructura si no existe (Header + Grid)
+            if (!cont.querySelector('.team-grid')) {
+                cont.innerHTML = `
+                    <div class="team-grid-header">
+                        <div style="font-size:12px; font-weight:900; color:var(--text-muted); text-transform:uppercase;">Equipo Presente</div>
+                        <div id="teamCounter" class="team-counter-badge empty">0 Seleccionados</div>
+                    </div>
+                    <div class="team-grid"></div>
+                `;
+            }
+
+            var grid = cont.querySelector('.team-grid');
+            var counter = cont.querySelector('#teamCounter');
+            
+            var esCoord = USER && (USER.rol === 'coordinador' || USER.rol === 'admin');
+            var vols = (APP_DB.voluntarios || []).filter(function (v) {
+                if (esCoord || v.grupos.indexOf(g) >= 0 || v.grupos.indexOf('TODOS') >= 0) return true;
+                return false;
+            });
+
+            if (vols.length === 0) vols = APP_DB.voluntarios || [];
+
+            // Actualizar Contador
+            var selCount = Object.keys(ATT_STATE.voluntariosPresentes).filter(k => ATT_STATE.voluntariosPresentes[k]).length;
+            counter.textContent = selCount + (selCount === 1 ? ' Seleccionado' : ' Seleccionados');
+            counter.className = 'team-counter-badge' + (selCount === 0 ? ' empty' : '');
+
+            // Renderizado inteligente (solo si el grid está vacío, luego usamos clases para evitar parpadeo)
+            if (grid.children.length === 0) {
+                vols.forEach(function(v) {
+                    var isSel = ATT_STATE.voluntariosPresentes[v.nombre];
+                    var d = document.createElement('div');
+                    d.className = 'team-member-card' + (isSel ? ' selected' : '');
+                    d.id = 'vol-card-' + btoa(v.nombre).replace(/=/g, '');
+                    
+                    var vUrl = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(v.nombre) + '&background=random&size=200';
+                    if (v.foto) {
+                        var fileIdmatch = v.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                        if (fileIdmatch) vUrl = 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=w200';
+                        else vUrl = v.foto;
+                    }
+
+                    d.onclick = function() {
+                        vibe('STRONG'); // Vibración más fuerte como pidió el usuario
+                        ATT_STATE.voluntariosPresentes[v.nombre] = !ATT_STATE.voluntariosPresentes[v.nombre];
+                        localStorage.setItem('DRAFT_ATT', JSON.stringify(ATT_STATE));
+                        
+                        // Toggle local sin parpadeo
+                        this.classList.toggle('selected');
+                        
+                        // Actualizar contador sin parpadeo
+                        var newSelCount = Object.keys(ATT_STATE.voluntariosPresentes).filter(k => ATT_STATE.voluntariosPresentes[k]).length;
+                        counter.textContent = newSelCount + (newSelCount === 1 ? ' Seleccionado' : ' Seleccionados');
+                        counter.className = 'team-counter-badge' + (newSelCount === 0 ? ' empty' : '');
+                    };
+
+                    d.innerHTML = `
+                        <div class="member-check-overlay">✓</div>
+                        <img src="${vUrl}" class="team-member-photo" onerror="this.src='https://ui-avatars.com/api/?name='+encodeURIComponent('${v.nombre}')+'&background=random'">
+                        <div style="font-weight:900; font-size:13px; line-height:1.2; margin-top:5px;">${v.nombre.split(' ')[0]} ${v.nombre.split(' ')[1] || ''}</div>
+                    `;
+                    grid.appendChild(d);
+                });
+            } else {
+                // Si ya existe el grid, solo sincronizar clases (por si se cargó un borrador)
+                vols.forEach(function(v) {
+                    var card = document.getElementById('vol-card-' + btoa(v.nombre).replace(/=/g, ''));
+                    if (card) {
+                        var isSel = ATT_STATE.voluntariosPresentes[v.nombre];
+                        if (isSel) card.classList.add('selected');
+                        else card.classList.remove('selected');
+                    }
+                });
+            }
+        }
+
+        function volSaveOfficialCompletion() {
+            var g = ATT_STATE.grupo;
+            var equipo = Object.keys(ATT_STATE.voluntariosPresentes).filter(k => ATT_STATE.voluntariosPresentes[k]);
+            
+            if (equipo.length === 0) {
+                alert('Por favor, selecciona al menos una persona (tú o tu dupla).');
+                return;
+            }
+
+            // Limpiar Borrador al éxito
+            localStorage.removeItem('DRAFT_ATT');
+
+            showLoader('Guardando confirmación oficial...');
+            var data = { 
+                tipo: 'log_asist_oficial', 
+                grupo: g, 
+                voluntario: USER.nombre, 
+                equipo: equipo.join(', ') 
+            };
+            
+            var cb = 'cb_log_of_' + Date.now();
+            window[cb] = function(res) {
+                hideLoader();
+                if (res.ok) {
+                    vibe('SUCCESS');
+                    triggerGamification('¡Increíble! Registro oficial completado por la dupla.');
+                    showView('v-success', '¡Registro Exitoso!', 'Se ha guardado que el reporte en el sistema oficial fue completado por: ' + equipo.join(', '), true, showVolDashboard);
+                } else {
+                    alert('Error: ' + res.error);
+                }
+            };
+            var sc = document.createElement('script');
+            sc.src = SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(data)) + '&callback=' + cb;
+            document.body.appendChild(sc);
+        }
+
+        function volProceedManual() {
+            vibe('CLICK');
+            ATT_STATE.mode = 'manual';
+            localStorage.setItem('DRAFT_ATT', JSON.stringify(ATT_STATE));
+            var g = ATT_STATE.grupo;
+
             // Filtro inicial de niños
             var ninos = APP_DB.participantes
                 .filter(function (p) { return p.g === g; })
                 .sort(function (a, b) { return a.n.localeCompare(b.n); });
 
-            // ── Renderizar lista de voluntarios del grupo (Pre-selección) ──
-            var esCoord = USER && (USER.rol === 'coordinador' || USER.rol === 'admin');
-            var volsDelGrupo = (APP_DB.voluntarios || []).filter(function (v) {
-                if (esCoord || v.grupos.indexOf(g) >= 0 || v.grupos.indexOf('TODOS') >= 0) return true;
-                var vPpsList = v.pps ? String(v.pps).split(',').map(function (x) { return x.trim(); }).filter(Boolean) : [];
-                if (vPpsList.indexOf('TODOS') >= 0) return true;
-                var gInfo = APP_DB.grupos.find(function (x) { return x.g === g; }) || {};
-                var translatedPps = PPS_MAP[gInfo.lugar ? gInfo.lugar.toUpperCase() : ''] || '';
-                return vPpsList.some(vpps => translatedPps.includes(vpps) || (gInfo.club && gInfo.club.includes(vpps)));
-            });
-
             // Autoseleccionar al usuario actual
             if (USER) ATT_STATE.voluntariosPresentes[USER.nombre] = true;
 
-            // Renderizar resumen inicial de voluntarios y la lista de niños
-            renderVolSelectionSummary();
+            // Unificacion Visual: Grid de fotos en lugar de chips
+            renderTeamSelector('attVolList', g);
+            
             renderAttendanceList(ninos);
-
-            showView('v-vol-attendance', g, 'Toma de Asistencia', true, showVolDashboard);
+            showView('v-vol-attendance', g, 'Toma de Lista (Respaldo)', true, () => startAttendance(g));
         }
 
-        function renderVolSelectionSummary() {
-            var volListEl = document.getElementById('attVolList');
-            var volCountEl = document.getElementById('attVolCount');
-            if (!volListEl) return;
-            
-            volListEl.innerHTML = '';
-            var presentNames = Object.keys(ATT_STATE.voluntariosPresentes);
-            if (volCountEl) volCountEl.textContent = presentNames.length;
-            
-            if (presentNames.length === 0) {
-                volListEl.innerHTML = '<div style="font-size:11px; color:var(--text-muted); font-weight:700; text-align:center; padding:10px;">⚠️ Nadie seleccionado aún</div>';
-                return;
-            }
+        function renderSummaryCard(data) {
+            var container = document.getElementById('resumenContent');
+            if (!container) return;
 
-            var strip = document.createElement('div');
-            strip.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px; padding:4px 0;';
-            presentNames.forEach(name => {
-                var v = APP_DB.voluntarios.find(x => x.nombre === name) || {nombre: name};
-                var chip = document.createElement('div');
-                chip.style.cssText = 'background:white; border:1.5px solid var(--primary); border-radius:30px; padding:4px 10px 4px 6px; display:flex; align-items:center; gap:8px; font-size:11px; font-weight:800;';
-                
-                var avatarHtml = '';
-                if (v.foto) {
-                    var fileIdmatch = v.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                    var pId = fileIdmatch ? fileIdmatch[1] : '';
-                    var vUrl = pId ? 'https://drive.google.com/thumbnail?id=' + pId + '&sz=200' : v.foto;
-                    avatarHtml = '<img src="' + vUrl + '" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">';
-                } else {
-                    avatarHtml = '<div style="width:20px; height:20px; border-radius:50%; background:var(--primary-soft); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:10px;">' + name.charAt(0) + '</div>';
-                }
+            var fecha = data.fecha || new Date().toLocaleDateString('es-EC');
+            var grupo = data.grupo || 'Sin Grupo';
+            var vol = data.voluntario || 'Voluntario';
+            var presentes = data.asistentes || [];
 
-                chip.innerHTML = avatarHtml + '<span>' + name.split(' ')[0] + '</span>';
-                strip.appendChild(chip);
-            });
-            volListEl.appendChild(strip);
+            var kidsHtml = presentes.map(k => `
+                <div class="summary-item">
+                    <span style="font-weight:700; font-size:13px;">${k.n}</span>
+                    <span style="font-size:10px; color:var(--text-muted);">ID: ${k.id}</span>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <div style="font-size:12px; font-weight:800; opacity:0.8; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">Respaldo de Asistencia</div>
+                        <div style="font-size:24px; font-weight:900;">${grupo}</div>
+                        <div style="margin-top:10px; font-size:13px; font-weight:700; background:rgba(255,255,255,0.2); display:inline-block; padding:4px 12px; border-radius:10px;">${fecha}</div>
+                    </div>
+                    <div class="summary-body">
+                        <div style="margin-bottom:20px;">
+                            <div style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Reportado por:</div>
+                            <div style="font-size:14px; font-weight:900; color:var(--primary);">${vol}</div>
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <div style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Presentes (${presentes.length}):</div>
+                        </div>
+                        <div style="max-height:300px; overflow-y:auto; padding-right:5px;">
+                            ${kidsHtml}
+                        </div>
+                    </div>
+                    <div class="summary-footer">
+                        Club Juan Montalvo · Children International
+                    </div>
+                </div>
+            `;
         }
+
+        function shareSummaryWhatsApp() {
+            vibe('CLICK');
+            var g = ATT_STATE.grupo;
+            var fecha = new Date().toLocaleDateString('es-EC');
+            var presentes = Object.keys(ATT_STATE.presentes).length;
+            
+            var text = `*RESPALDO DE ASISTENCIA*\n\n`
+                     + `*Grupo:* ${g}\n`
+                     + `*Fecha:* ${fecha}\n`
+                     + `*Presentes:* ${presentes}\n\n`
+                     + `_Adjunto lista manual tomada en la App por falta del encargado oficial._`;
+            
+            var url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
+            window.open(url, '_blank');
+        }
+
+        function saveLocalReport(data) {
+            // Guardar en array de reportes recientes (últimos 10)
+            RECENT_REPORTS.unshift(data);
+            if (RECENT_REPORTS.length > 10) RECENT_REPORTS.pop();
+            localStorage.setItem('RECENT_REPORTS', JSON.stringify(RECENT_REPORTS));
+        }
+
 
         function renderAttendanceList(ninos) {
             var list = document.getElementById('attList');
@@ -2537,6 +3058,7 @@
         }
 
         function volSaveAttendance() {
+            localStorage.removeItem('DRAFT_ATT');
             var count = Object.keys(ATT_STATE.presentes).length;
             var total = APP_DB.participantes.filter(function (p) { return p.g === ATT_STATE.grupo; }).length;
             if (count === 0 && !confirm('No marcaste ningún niño como presente. ¿Guardar de todas formas?')) return;
@@ -2562,8 +3084,11 @@
             };
             callAPI({ data: JSON.stringify(payload) }, function () {
                 hideLoader();
+                vibe('SUCCESS');
                 triggerGamification('¡Asistencia Guardada! Eres una estrella.');
-                showVolDashboard();
+                saveLocalReport(payload);
+                renderSummaryCard(payload);
+                showView('v-vol-att-resumen', payload.grupo, 'Reporte de Respaldo', true, showVolDashboard);
             });
         }
 
