@@ -2723,7 +2723,7 @@
                 if (av) {
                     if (USER.foto) {
                         var fileIdmatch = USER.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                        var pUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=100' : USER.foto;
+                        var pUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=200' : USER.foto;
                         av.innerHTML = `<img src="${pUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
                     } else { av.textContent = USER.nombre.charAt(0); }
                 }
@@ -2732,9 +2732,20 @@
             let rawHistory = (APP_DB.asistencia_metrics && APP_DB.asistencia_metrics.historial_global) ? [...APP_DB.asistencia_metrics.historial_global] : [];
             let photos = (APP_DB.comunidad_fotos) ? [...APP_DB.comunidad_fotos] : [];
 
+            // Función para parsear fechas dd/mm/yyyy hh:mm de forma segura
+            function parseFecha(s) {
+                if (!s || typeof s !== 'string') return 0;
+                try {
+                    const parts = s.split(' ');
+                    const dParts = parts[0].split('/');
+                    const tParts = parts[1] ? parts[1].split(':') : ["00","00"];
+                    return new Date(dParts[2], dParts[1]-1, dParts[0], tParts[0], tParts[1]).getTime();
+                } catch(e) { return 0; }
+            }
+
             let combined = [];
-            rawHistory.slice(0, 10).forEach(h => combined.push({...h, type: 'activity', ts: new Date(h.fecha).getTime() || 0, pinned: "NO"}));
-            photos.forEach(p => combined.push({...p, type: 'photo', ts: new Date(p.fecha).getTime() || 0}));
+            rawHistory.slice(0, 10).forEach(h => combined.push({...h, type: 'activity', ts: parseFecha(h.fecha), pinned: "NO"}));
+            photos.forEach(p => combined.push({...p, type: 'photo', ts: parseFecha(p.fecha)}));
             
             combined = combined.filter(item => {
                 const id = (item.type === 'photo' ? (item.url || item.fecha) : (item.voluntario + item.fecha + item.grupo));
@@ -2771,7 +2782,7 @@
                 var authorPic = authorsName.charAt(0);
                 if (authorData && authorData.foto) {
                     var mid = authorData.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                    var url = mid ? 'https://drive.google.com/thumbnail?id=' + mid[1] + '&sz=100' : authorData.foto;
+                    var url = mid ? 'https://drive.google.com/thumbnail?id=' + mid[1] + '&sz=200' : authorData.foto;
                     authorPic = `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">`;
                 }
 
@@ -2804,7 +2815,7 @@
                     var bodyHtml = '';
                     if (item.url) {
                         var fileIdmatch = item.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                        var cUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=600' : item.url;
+                        var cUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=1000' : item.url;
                         bodyHtml = `<img src="${cUrl}" style="width:100%; border-radius:14px; margin-top:10px; cursor:zoom-in;" onclick="window.open('${item.url}', '_blank')">`;
                     }
                     if (item.texto) {
