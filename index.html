@@ -1375,6 +1375,12 @@
                 <div id="attCrossResults" style="display:none;margin-bottom:12px;"></div>
                 <!-- Lista de niños -->
                 <div id="attList" style="display:grid; gap:8px;"></div>
+                
+                <!-- Historial de logs del grupo -->
+                <div id="attLogsSection" style="margin-top:24px; border-top:2px dashed var(--border); padding-top:16px;">
+                    <div style="font-size:11px; font-weight:900; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px;">Últimos registros de asistencia</div>
+                    <div id="attLogsList" style="display:grid; gap:10px;"></div>
+                </div>
 
             </div>
 
@@ -2672,6 +2678,16 @@
             document.body.appendChild(sc);
         }
 
+        function volHidePost(id) {
+            if(!confirm("¿Deseas ocultar esta publicación para todos los usuarios? Esta acción no se puede deshacer fácilmente.")) return;
+            showLoader("Ocultando publicación...");
+            callAPI({ tipo: 'hide_comunidad_post', id: id }, function(d){
+                hideLoader();
+                vibe('SUCCESS');
+                syncDB();
+            });
+        }
+
         var VOL_LIKES = JSON.parse(localStorage.getItem('VOL_LIKES') || '{}');
 
         function volToggleLike(id) {
@@ -2686,20 +2702,16 @@
 
         var HIDDEN_POSTS = JSON.parse(localStorage.getItem('HIDDEN_POSTS') || '[]');
 
-        function volHidePost(id) {
-            vibe('CLICK');
-            if (confirm("¿Deseas ocultar esta publicación de tu muro?")) {
-                HIDDEN_POSTS.push(id);
-                localStorage.setItem('HIDDEN_POSTS', JSON.stringify(HIDDEN_POSTS));
-                renderVolFeed();
-            }
-        }
-
         function volTogglePin(id, currentStatus) {
             vibe('STRONG');
             var isPinned = currentStatus === "SI";
             var pinnedCount = (APP_DB.comunidad_fotos || []).filter(f => f.pinned === "SI").length;
             
+            let isAdmin = (norm(USER.nombre).includes("alexander") || norm(USER.nombre).includes("castro"));
+            if (!isAdmin) {
+                return alert("⚠️ Solo el administrador Alexander puede fijar publicaciones en el muro.");
+            }
+
             if (!isPinned && pinnedCount >= 5) {
                 return alert("⚠️ Límite alcanzado: Solo puedes tener hasta 5 publicaciones fijadas. Desancla una antes de fijar otra.");
             }
@@ -2733,7 +2745,6 @@
                 }
             }
 
-            let rawHistory = (APP_DB.asistencia_metrics && APP_DB.asistencia_metrics.historial_global) ? [...APP_DB.asistencia_metrics.historial_global] : [];
             let photos = (APP_DB.comunidad_fotos) ? [...APP_DB.comunidad_fotos] : [];
 
             // Función para parsear fechas dd/mm/yyyy hh:mm de forma segura
@@ -2748,7 +2759,7 @@
             }
 
             let combined = [];
-            rawHistory.slice(0, 10).forEach(h => combined.push({...h, type: 'activity', ts: parseFecha(h.fecha), pinned: "NO"}));
+            // Las asistencias se mueven a la vista de grupos. El muro es solo para fotos y mensajes.
             photos.forEach(p => combined.push({...p, type: 'photo', ts: parseFecha(p.fecha)}));
             
             combined = combined.filter(item => {
@@ -2841,9 +2852,10 @@
                         bodyHtml += `<div style="${textStyle} font-weight:700; line-height:1.4; color:var(--text); word-break:break-word; overflow-wrap:break-word;">${item.texto}</div>`;
                     }
                     
-                    // Si el nombre parece una URL (error de datos), lo limpiamos visualmente
-                    let displayName = String(authorsName || "Voluntario");
-                    if (displayName.startsWith("http")) displayName = "Participante";
+                    // Solo Administrador o Autor pueden borrar globalmente
+                    let isAdmin = (norm(USER.nombre).includes("alexander") || norm(USER.nombre).includes("castro"));
+                    let isAuthor = (norm(item.vol) === norm(USER.nombre));
+                    let hideBtn = (isAdmin || isAuthor) ? `<button onclick="volHidePost('${id}')" style="background:#f1f5f9; border:none; color:var(--text-muted); padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">Ocultar Publicación</button>` : "";
 
                     card.innerHTML = `
                         <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; position:relative;">
@@ -2862,9 +2874,10 @@
                                 <span style="font-size:20px;">${isLiked?'❤️':'♡'}</span>
                                 <span style="font-size:11px; font-weight:800; color:var(--text-muted);">${likeText}</span>
                             </div>
-                            <button onclick="volHidePost('${id}')" style="background:#f1f5f9; border:none; color:var(--text-muted); padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">Ocultar Publicación</button>
+                            ${hideBtn}
                         </div>
                     `;
+
 
                 }
                 cont.appendChild(card);
@@ -3216,7 +3229,8 @@
             renderTeamSelector('attVolList', g);
             
             renderAttendanceList(ninos);
-            showView('v-vol-attendance', g, 'Toma de Lista (Respaldo)', true, () => startAttendance(g));
+            renderAttLogs(g);
+            showView('v-vol-attendance', g, 'Toma de Lista (Respaldo)', true, () => startAttendance ? startAttendance(g) : null);
         }
 
         function renderSummaryCard(data) {
@@ -3284,6 +3298,42 @@
             localStorage.setItem('RECENT_REPORTS', JSON.stringify(RECENT_REPORTS));
         }
 
+        function renderAttLogs(groupId) {
+            const cont = document.getElementById('attLogsList');
+            if(!cont) return;
+            cont.innerHTML = "";
+            
+            const logs = (APP_DB.asistencia_metrics && APP_DB.asistencia_metrics.historial_global || []).filter(h => h.grupo === groupId);
+            if(logs.length === 0) {
+                cont.innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">No hay registros recientes para este grupo.</div>`;
+                return;
+            }
+
+            logs.forEach(log => {
+                const item = document.createElement('div');
+                item.style = "background:var(--bg); padding:10px; border-radius:10px; border:1px solid var(--border); display:flex; align-items:center; gap:12px;";
+                
+                // Buscar foto de los voluntarios
+                let vNames = (log.voluntarios || [log.voluntario]);
+                let vPicsHtml = vNames.map(vName => {
+                    const vData = (APP_DB.voluntarios || []).find(v => norm(v.nombre) === norm(vName));
+                    if(vData && vData.foto) {
+                        return `<img src="${vData.foto}" style="width:24px; height:24px; border-radius:50%; border:1px solid white; margin-left:-8px; first-child:margin-left:0;">`;
+                    }
+                    return `<div style="width:24px; height:24px; border-radius:50%; background:var(--primary); color:white; font-size:10px; display:flex; align-items:center; justify-content:center; border:1px solid white; margin-left:-8px;">${String(vName).charAt(0)}</div>`;
+                }).join('');
+
+                item.innerHTML = `
+                    <div style="display:flex; overflow:visible; margin-left:8px;">${vPicsHtml}</div>
+                    <div style="flex:1;">
+                        <div style="font-size:12px; font-weight:700;">${vNames.join(', ')}</div>
+                        <div style="font-size:10px; color:var(--text-muted);">${log.fecha} · Reportaron asistencia</div>
+                    </div>
+                    <div style="font-size:16px;">✅</div>
+                `;
+                cont.appendChild(item);
+            });
+        }
 
         function renderAttendanceList(ninos) {
             var list = document.getElementById('attList');
