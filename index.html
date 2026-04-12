@@ -714,25 +714,26 @@
             gap: 12px;
         }
 
-        /* ── DOCK PRO 2026 (5 ITEMS) ── */
+        /* ── DOCK MODERNO (ULTRA-GLASS) ── */
         .bottom-nav {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border-top: 1px solid rgba(255,255,255,0.4);
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 65px;
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(25px) saturate(200%);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            border: 1px solid rgba(255,255,255,0.5);
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 9999;
-            padding: 0 10px env(safe-area-inset-bottom) 10px;
-            transform: translateY(100%);
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+            padding: 0 15px;
+            border-radius: 24px;
+            transform: translateY(150%);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
         }
 
         .bottom-nav.visible {
@@ -836,7 +837,42 @@
 
         /* Espaciado para cuando el dock está activo */
         .container.nav-active {
-            padding-bottom: 90px !important;
+            padding-bottom: 110px !important;
+        }
+
+        /* Caja de Publicación */
+        .muro-post-box {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .muro-post-box.collapsed {
+            max-height: 50px;
+            padding: 12px 16px;
+            cursor: pointer;
+        }
+        .muro-post-box .post-input {
+            width: 100%;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            resize: none;
+            outline: none;
+            color: var(--text);
+            background: transparent;
+        }
+        .muro-post-box .post-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 12px;
         }
 
         @keyframes fadeIn {
@@ -1240,18 +1276,47 @@
             </div>
 
             <!-- VOL-FEED (MURO DE NOVEDADES SOCIAL) -->
-            <div class="view" id="v-vol-feed">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding:0 10px;">
+            <div class="view" id="v-vol-feed" style="overflow-x:hidden;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:0 10px;">
                     <div>
                         <h2 style="font-weight:900; font-size:26px; letter-spacing:-1px;">Muro Social</h2>
-                        <p style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Vida del Club ≋ 2026</p>
+                        <p style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Vida del Club ≋ 50 Recientes</p>
                     </div>
-                    <button onclick="vibe('CLICK'); document.getElementById('comFotoInpMuro').click()" style="background:var(--primary); color:white; border:none; border-radius:15px; width:45px; height:45px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; box-shadow:var(--shadow-lg);">
-                        +
-                    </button>
-                    <input type="file" id="comFotoInpMuro" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">
                 </div>
-                <div id="feedContent" style="display:grid; gap:20px;">
+
+                <!-- CAJA DE PUBLICACIÓN MODERNA -->
+                <div class="muro-post-box collapsed" id="muroPostBox">
+                    <div id="postCollapsedView" onclick="toggleMuroPostBox()" style="display:flex; align-items:center; gap:12px;">
+                        <div id="postAuthorAvatar" style="width:34px; height:34px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); font-size:14px; flex-shrink:0;">V</div>
+                        <div style="color:var(--text-muted); font-size:14px; font-weight:700; flex:1;">¿Qué quieres compartir hoy?</div>
+                        <div style="font-size:20px; color:var(--primary);">+</div>
+                    </div>
+                    
+                    <div id="postExpandedView" style="display:none;">
+                        <textarea id="postTextInp" class="post-input" placeholder="Escribe un mensaje o reflexión..." rows="3"></textarea>
+                        
+                        <!-- Preview de imagen seleccionada -->
+                        <div id="postPhotoPreview" style="display:none; position:relative; margin-bottom:15px;">
+                            <img id="postPreviewImg" style="width:100%; border-radius:12px; aspect-ratio:16/9; object-fit:cover;">
+                            <button onclick="clearPostPhoto()" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.5); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;">×</button>
+                        </div>
+
+                        <div class="post-actions">
+                            <div style="display:flex; gap:10px;">
+                                <button onclick="vibe('CLICK'); document.getElementById('postPhotoInp').click()" style="background:var(--accent-soft); color:var(--accent); border:none; padding:8px 12px; border-radius:10px; font-size:12px; font-weight:900; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                                    📸 Foto
+                                </button>
+                                <input type="file" id="postPhotoInp" accept="image/*" style="display:none" onchange="previewPostPhoto(event)">
+                            </div>
+                            <div style="display:flex; gap:10px;">
+                                <button onclick="toggleMuroPostBox()" style="background:none; border:none; color:var(--text-muted); font-size:13px; font-weight:800; cursor:pointer;">Cancelar</button>
+                                <button onclick="vibe('MAGIC'); volPostToMuro()" style="background:var(--primary); color:white; border:none; padding:8px 20px; border-radius:10px; font-size:13px; font-weight:900; cursor:pointer; box-shadow:var(--shadow);">Publicar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="feedContent" style="display:grid; gap:24px; padding-bottom:50px;">
                     <!-- Actividad e Interacciones inyectadas vía JS -->
                 </div>
             </div>
@@ -2615,22 +2680,54 @@
             renderVolFeed();
         }
 
+        function toggleMuroPostBox() {
+            const box = document.getElementById('muroPostBox');
+            box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+        }
+
+        function volPostToMuro() {
+            const txt = document.getElementById('muroPostText').value.trim();
+            if (!txt) return alert("Escribe algo para compartir.");
+            showLoader("Publicando...");
+            const payload = { tipo: 'muro', vol: USER.nombre, texto: txt, fecha: new Date().toLocaleString() };
+            callAPI({ data: JSON.stringify(payload) }, () => {
+                hideLoader();
+                document.getElementById('muroPostText').value = '';
+                toggleMuroPostBox();
+                syncDB();
+            });
+        }
+
         function renderVolFeed() {
             const cont = document.getElementById('feedContent');
             if (!cont) return;
             cont.innerHTML = '';
 
+            // Actualizar avatar de la caja de post si existe
+            if (USER) {
+                const av = document.getElementById('postAuthorAvatar');
+                if (av) {
+                    if (USER.foto) {
+                        var fileIdmatch = USER.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                        var pUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=100' : USER.foto;
+                        av.innerHTML = `<img src="${pUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
+                    } else {
+                        av.textContent = USER.nombre.charAt(0);
+                    }
+                }
+            }
+
             let rawHistory = (APP_DB.asistencia_metrics && APP_DB.asistencia_metrics.historial_global) ? [...APP_DB.asistencia_metrics.historial_global] : [];
             let photos = (APP_DB.comunidad_fotos) ? [...APP_DB.comunidad_fotos] : [];
 
-            // Mezclar y ordenar cronológicamente
+            // Mezclar y ordenar cronológicamente - AHORA HASTA 50 RECUERDOS
             let combined = [];
-            rawHistory.slice(0, 10).forEach(h => combined.push({...h, type: 'activity', ts: new Date(h.fecha).getTime() || 0}));
-            photos.slice(-15).forEach(p => combined.push({...p, type: 'photo', ts: new Date(p.fecha).getTime() || 0}));
+            rawHistory.slice(0, 15).forEach(h => combined.push({...h, type: 'activity', ts: new Date(h.fecha).getTime() || 0}));
+            photos.slice(-50).forEach(p => combined.push({...p, type: 'photo', ts: new Date(p.fecha).getTime() || 0}));
             combined.sort((a,b) => (b.ts || 0) - (a.ts || 0));
 
             if (combined.length === 0) {
-                cont.innerHTML = '<div class="alert alert-info" style="text-align:center;">Aún no hay actividad reciente. <br> ¡Sé el primero en marcar asistencia o subir una foto!</div>';
+                cont.innerHTML = '<div class="alert alert-info" style="text-align:center;">Aún no hay actividad reciente. <br> ¡Sé el primero en compartir algo!</div>';
                 return;
             }
 
@@ -2642,6 +2739,15 @@
                 const isLiked = likes.indexOf(USER.nombre) !== -1;
                 const authorsName = (item.type === 'photo' ? item.vol : item.voluntario);
                 
+                // BUSCAR FOTO ACTUALIZADA DEL AUTOR EN LA APP_DB
+                var authorData = (APP_DB.voluntarios || []).find(v => v.nombre === authorsName);
+                var authorPic = authorsName.charAt(0);
+                if (authorData && authorData.foto) {
+                    var mid = authorData.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    var url = mid ? 'https://drive.google.com/thumbnail?id=' + mid[1] + '&sz=100' : authorData.foto;
+                    authorPic = `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">`;
+                }
+
                 let likeText = "";
                 if (likes.length > 0) {
                     if (likes.length === 1) likeText = `A ${likes[0]} le gusta esto`;
@@ -2652,7 +2758,7 @@
                 if (item.type === 'activity') {
                     card.innerHTML = `
                         <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
-                            <div style="width:42px; height:42px; border-radius:14px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">${authorsName.charAt(0)}</div>
+                            <div style="width:42px; height:42px; border-radius:14px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05); overflow:hidden;">${authorPic}</div>
                             <div>
                                 <div style="font-size:15px; font-weight:900; color:var(--text);">${authorsName}</div>
                                 <div style="font-size:10px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.5px;">Actualización de Asistencia</div>
@@ -2669,21 +2775,43 @@
                         </div>
                         <div style="font-size:10px; color:var(--text-muted); margin-top:12px; font-weight:700; text-align:right;">${item.fecha}</div>
                     `;
-                } else {
+                } else if (item.url) {
                     var fileIdmatch = item.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
                     var parsedId = fileIdmatch ? fileIdmatch[1] : '';
-                    var cUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w800' : item.url;
+                    var cUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=800' : item.url;
                     
                     card.innerHTML = `
                         <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
-                            <div style="width:42px; height:42px; border-radius:14px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--accent); font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">${authorsName.charAt(0)}</div>
+                            <div style="width:42px; height:42px; border-radius:14px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--accent); font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05); overflow:hidden;">${authorPic}</div>
                             <div>
                                 <div style="font-size:15px; font-weight:900; color:var(--text);">${authorsName}</div>
                                 <div style="font-size:10px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">Compartió un Recuerdo</div>
                             </div>
                         </div>
                         <img src="${cUrl}" class="feed-photo" style="cursor:zoom-in; width:100%; border-radius:16px;" onclick="vibe('CLICK'); window.open('${item.url}', '_blank')">
-                        <div style="font-size:15px; font-weight:800; color:var(--text); margin-top:12px;">${item.grupo || 'Niños del Club'}</div>
+                        ${item.texto ? `<div style="font-size:14px; font-weight:700; color:var(--text); margin-top:12px; line-height:1.4;">${item.texto}</div>` : ''}
+                        <div style="font-size:11px; font-weight:800; color:var(--primary); margin-top:8px;">📍 ${item.grupo || 'Niños del Club'}</div>
+                        <div class="social-actions" style="margin-top:15px; display:flex; align-items:center; gap:12px;">
+                            <button class="like-btn ${isLiked?'active':''}" onclick="volToggleLike('${id}')" style="display:flex; align-items:center; gap:5px; background:none; border:none; cursor:pointer;">
+                                <span style="font-size:22px;">${isLiked?'❤️':'♡'}</span>
+                            </button>
+                            <span class="like-names" style="font-size:12px; font-weight:700; color:var(--text-muted);">${likeText}</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:12px; font-weight:700; text-align:right;">${item.fecha}</div>
+                    `;
+                } else {
+                    // Publicación de SOLO TEXTO
+                    card.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+                            <div style="width:42px; height:42px; border-radius:14px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05); overflow:hidden;">${authorPic}</div>
+                            <div>
+                                <div style="font-size:15px; font-weight:900; color:var(--text);">${authorsName}</div>
+                                <div style="font-size:10px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.5px;">Mensaje de Comunidad</div>
+                            </div>
+                        </div>
+                        <div style="background:linear-gradient(135deg, white, #f8fafc); border-radius:16px; padding:20px; font-size:16px; font-weight:800; color:var(--primary); line-height:1.5; border:1px solid rgba(0,0,0,0.03);">
+                            "${item.texto}"
+                        </div>
                         <div class="social-actions" style="margin-top:15px; display:flex; align-items:center; gap:12px;">
                             <button class="like-btn ${isLiked?'active':''}" onclick="volToggleLike('${id}')" style="display:flex; align-items:center; gap:5px; background:none; border:none; cursor:pointer;">
                                 <span style="font-size:22px;">${isLiked?'❤️':'♡'}</span>
@@ -3551,42 +3679,84 @@
             };
         }
 
-        // --- SUBIDA DE FOTO A LA COMUNIDAD ---
-        function uploadComunidadFoto(event) {
+        // --- PUBLICACIÓN UNIFICADA (TEXTO Y/O FOTO) ---
+        var POST_PHOTO_CACHE = null;
+
+        function toggleMuroPostBox() {
+            const box = document.getElementById('muroPostBox');
+            const collapsed = document.getElementById('postCollapsedView');
+            const expanded = document.getElementById('postExpandedView');
+            if (box.classList.contains('collapsed')) {
+                box.classList.remove('collapsed');
+                collapsed.style.display = 'none';
+                expanded.style.display = 'block';
+                document.getElementById('postTextInp').focus();
+            } else {
+                box.classList.add('collapsed');
+                collapsed.style.display = 'flex';
+                expanded.style.display = 'none';
+                clearPostPhoto();
+            }
+        }
+
+        function previewPostPhoto(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
-            showLoader("Optimizando y subiendo foto al muro...");
-            
+            showLoader("Preparando imagen...");
             compressImage(file, 1200, 0.7, function(b64) {
-                const volG = USER.grupos && USER.grupos.length > 0 ? USER.grupos[0] : 'General';
-                fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        tipo: "upload_comunidad_foto",
-                        voluntario: USER.nombre,
-                        grupo: volG,
-                        base64: b64
-                    })
-                })
-                .then(res => res.json())
-                .then(res => {
-                    hideLoader();
-                    if(res.ok) {
-                        vibe('SUCCESS');
-                        triggerGamification("¡Genial! Tu foto fue compartida al club.");
-                        setTimeout(() => volSyncSistema(), 1500);
-                    } else {
-                        showToast("Error subiendo foto: " + res.error, true);
-                    }
-                })
-                .catch(err => {
-                    hideLoader();
-                    showToast("Error de red: " + err, true);
-                });
+                hideLoader();
+                POST_PHOTO_CACHE = b64;
+                document.getElementById('postPhotoPreview').style.display = 'block';
+                document.getElementById('postPreviewImg').src = b64;
             });
-            if (document.getElementById('comFotoInpMuro')) document.getElementById('comFotoInpMuro').value = '';
         }
+
+        function clearPostPhoto() {
+            POST_PHOTO_CACHE = null;
+            document.getElementById('postPhotoPreview').style.display = 'none';
+            document.getElementById('postPhotoInp').value = '';
+        }
+
+        function volPostToMuro() {
+            const text = document.getElementById('postTextInp').value.trim();
+            if (!text && !POST_PHOTO_CACHE) return alert("Escribe un mensaje o adjunta una foto para publicar.");
+
+            showLoader(POST_PHOTO_CACHE ? "Subiendo publicación con foto..." : "Publicando mensaje...");
+            const volG = USER.grupos && USER.grupos.length > 0 ? USER.grupos[0] : 'General';
+
+            const payload = {
+                tipo: "upload_comunidad_foto",
+                voluntario: USER.nombre,
+                grupo: volG,
+                texto: text,
+                base64: POST_PHOTO_CACHE // Puede ser null si es solo texto
+            };
+
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(res => {
+                hideLoader();
+                if(res.ok) {
+                    vibe('SUCCESS');
+                    triggerGamification("¡Publicado en el muro con éxito!");
+                    document.getElementById('postTextInp').value = '';
+                    toggleMuroPostBox();
+                    setTimeout(() => volSyncSistema(), 1500);
+                } else {
+                    showToast("Error al publicar: " + res.error, true);
+                }
+            })
+            .catch(err => {
+                hideLoader();
+                showToast("Error de red: " + err, true);
+            });
+        }
+
+        // --- SUBIDA DE FOTO A LA COMUNIDAD (Mantenido por compatibilidad pero redirigido) ---
+        function uploadComunidadFoto(event) { previewPostPhoto(event); toggleMuroPostBox(); }
 
         function uploadVolProfile(event) {
             const file = event.target.files[0];
