@@ -766,12 +766,16 @@
         .timeline-card {
             background: white;
             border-radius: 20px;
-            padding: 20px;
+            padding: 16px;
             margin-bottom: 20px;
             border: 1px solid rgba(0,0,0,0.05);
             box-shadow: 0 4px 20px rgba(0,0,0,0.03);
             position: relative;
+            max-width: 100%;
+            overflow-x: hidden;
+            word-break: break-word;
         }
+
 
         .activity-dot {
             width: 10px;
@@ -2837,26 +2841,31 @@
                         bodyHtml += `<div style="${textStyle} font-weight:700; line-height:1.4; color:var(--text); word-break:break-word; overflow-wrap:break-word;">${item.texto}</div>`;
                     }
                     
+                    // Si el nombre parece una URL (error de datos), lo limpiamos visualmente
+                    let displayName = String(authorsName || "Voluntario");
+                    if (displayName.startsWith("http")) displayName = "Participante";
+
                     card.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px; position:relative;">
-                            <div style="width:40px; height:40px; border-radius:12px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); overflow:hidden; border:1px solid var(--border);">${authorPic}</div>
-                            <div style="flex:1; overflow:hidden;">
-                                <div style="font-size:14px; font-weight:900; display:flex; align-items:center; justify-content:space-between; gap:6px;">
-                                    <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${authorsName}${roleBadge}</div>
+                        <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; position:relative;">
+                            <div style="width:40px; height:40px; border-radius:12px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); overflow:hidden; border:1px solid var(--border); flex-shrink:0;">${authorPic}</div>
+                            <div style="flex:1; min-width:0;">
+                                <div style="font-size:14px; font-weight:900; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px;">
+                                    <div style="word-break:break-word; max-width:100%;">${displayName}${roleBadge}</div>
                                     ${pinBtn}
                                 </div>
                                 <div style="font-size:10px; color:var(--text-muted); font-weight:700;">${item.fecha} · ${gText}</div>
                             </div>
                         </div>
                         ${bodyHtml}
-                        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; border-top:1px solid #f1f5f9; padding-top:12px;">
                             <div onclick="volToggleLike('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
                                 <span style="font-size:20px;">${isLiked?'❤️':'♡'}</span>
                                 <span style="font-size:11px; font-weight:800; color:var(--text-muted);">${likeText}</span>
                             </div>
-                            <button onclick="volHidePost('${id}')" style="background:none; border:none; color:var(--text-muted); font-size:11px; font-weight:700; cursor:pointer;">Ocultar</button>
+                            <button onclick="volHidePost('${id}')" style="background:#f1f5f9; border:none; color:var(--text-muted); padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">Ocultar Publicación</button>
                         </div>
                     `;
+
                 }
                 cont.appendChild(card);
             });
