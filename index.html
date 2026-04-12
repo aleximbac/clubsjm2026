@@ -48,15 +48,22 @@
             overflow-x: hidden;
         }
 
-        /* ── RESPONSIVE CONTAINER ── */
+        /* ── RESPONSIVE CONTAINER (ULTRA FLUID) ── */
         .container {
             width: 100%;
             max-width: 600px;
             margin: 0 auto;
-            padding: 16px;
+            padding: 12px; /* Reducido para móvil pequeño */
             flex: 1;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        @media (min-width: 480px) {
+            .container {
+                padding: 20px;
+            }
         }
 
         @media (min-width: 768px) {
@@ -83,11 +90,18 @@
         .card {
             background: var(--card);
             border-radius: var(--radius);
-            padding: 16px;
+            padding: 12px; /* Más compacto en móvil */
             margin-bottom: 12px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
             transition: transform 0.1s;
+            max-width: 100%;
+        }
+
+        @media (min-width: 400px) {
+            .card {
+                padding: 16px;
+            }
         }
 
         .btn {
@@ -575,15 +589,14 @@
         #comFotoFeed::-webkit-scrollbar { display: none; }
         
         .mural-card {
-            flex: 0 0 160px;
-            height: 220px;
+            flex: 0 0 140px; /* Un poco más pequeño para dar aire */
+            height: 200px;
             position: relative;
-            border-radius: 20px;
+            border-radius: 16px;
             overflow: hidden;
             background: var(--border);
             scroll-snap-align: start;
-            box-shadow: var(--shadow-sm);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         .mural-card:active {
@@ -1113,34 +1126,42 @@
 
             <!-- VOL-DASHBOARD -->
             <div class="view" id="v-vol-dash">
-                <!-- Header horizontal limpio -->
-                <div class="card" style="display:flex; align-items:center; gap:16px; padding:16px; margin-bottom:20px; border-bottom:4px solid var(--primary); border-radius:12px;">
-                    <div style="width:60px; height:60px; flex-shrink:0; position:relative;">
-                        <img id="volProfileImg" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=V&background=2563eb&color=fff';" src="https://ui-avatars.com/api/?name=V&background=2563eb&color=fff" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #ddd; cursor:pointer;" onclick="document.getElementById('volProfileInp').click()">
-                        <div style="position:absolute; bottom:0; right:0; background:white; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; border:1px solid #ddd;">📸</div>
-                    </div>
-                    <div>
-                        <div style="font-size:10px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:1px;">Bienvenido/a</div>
-                        <h2 style="font-weight:900; font-size:18px; line-height:1.2;">Hola, <span id="volName">---</span></h2>
-                        <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-top:2px;" id="volGroupCount">0 Grupos asignados</div>
+                <!-- Header horizontal con Salir -->
+                <div class="card" style="padding:16px; margin-bottom:20px; border-bottom:4px solid var(--primary); position:relative;">
+                    <button class="btn btn-outline" onclick="goHome()" style="position:absolute; top:12px; right:12px; width:auto; padding:6px 12px; font-size:11px; font-weight:900; background:var(--primary-soft); color:var(--primary); border:none; border-radius:8px;">🚪 SALIR</button>
+                    
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:50px; height:50px; flex-shrink:0; position:relative;">
+                            <img id="volProfileImg" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=V&background=2563eb&color=fff';" src="https://ui-avatars.com/api/?name=V&background=2563eb&color=fff" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #ddd; cursor:pointer;" onclick="document.getElementById('volProfileInp').click()">
+                            <div style="position:absolute; bottom:0; right:0; background:white; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; border:1px solid #ddd;">📸</div>
+                        </div>
+                        <div style="padding-right:70px;"> <!-- Espacio para el botón Salir -->
+                            <div style="font-size:10px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:1px;">Voluntario CI</div>
+                            <h2 style="font-weight:900; font-size:16px; line-height:1.2; word-break:break-word;">Hola, <span id="volName">...</span></h2>
+                            <div style="font-size:11px; font-weight:700; color:var(--text-muted);" id="volGroupCount">0 Grupos</div>
+                        </div>
                     </div>
                 </div>
                 
                 <input type="file" id="volProfileInp" accept="image/*" style="display:none" onchange="uploadVolProfile(event)">
                 
-                <div style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px; padding-left:4px;">Mis Grupos CI</div>
+                <div style="font-size:11px; font-weight:900; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px; padding-left:4px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>Mis Grupos CI</span>
+                    <span onclick="google.script.run.withSuccessHandler(init).initApp()" style="color:var(--primary); font-size:10px; cursor:pointer;">🔄 Sincronizar</span>
+                </div>
                 <div id="volGroupsList" style="display:grid; gap:10px;"></div>
             </div>
 
             <!-- VOL-ATTENDANCE -->
             <div class="view" id="v-vol-attendance">
-                <!-- Header compacto -->
-                <div style="background:var(--text); color:white; padding:16px; border-radius:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <div style="font-size:11px; font-weight:800; opacity:0.8;">NIÑOS PRESENTES</div>
-                        <div style="font-size:28px; font-weight:900;" id="attCounter">0</div>
+                <!-- Header compacto y adaptable -->
+                <div style="background:var(--text); color:white; padding:12px; border-radius:12px; margin-bottom:10px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px;">
+                    <div style="min-width:120px;">
+                        <div style="font-size:10px; font-weight:800; opacity:0.8; text-transform:uppercase;">NIÑOS PRESENTES</div>
+                        <div style="font-size:24px; font-weight:900;" id="attCounter">0</div>
                     </div>
-                    <button class="btn btn-primary" style="background:#22c55e; width:auto; padding:8px 24px;" onclick="volSaveAttendance()">Guardar ✅</button>
+                    <button class="btn btn-primary" style="background:#22c55e; width:auto; padding:8px 16px; font-size:14px;" onclick="volSaveAttendance()">Guardar ✅</button>
+                    <button class="btn btn-outline" onclick="showVolDashboard()" style="background:rgba(255,255,255,0.1); border:none; color:white; width:auto; padding:8px 12px; font-size:11px;">← VOLVER</button>
                 </div>
                 <!-- Panel de voluntarios presentes -->
                 <div id="attTeamGridContainer" style="margin-bottom:16px;">
