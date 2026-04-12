@@ -1334,7 +1334,7 @@
                     onclick="volDoGroupChange()">✅ Confirmar Cambio Definitivo</button>
             </div>
 
-            <!-- VOL-JUSTIFICATION: formulario para que el voluntario justifique su falta -->
+            <!-- VOL-JUSTIFICATION -->
             <div class="view" id="v-vol-justification">
                 <div class="alert alert-info" style="margin-bottom:16px;">
                     <span>📝</span>
@@ -1342,14 +1342,11 @@
                 </div>
                 <div class="card">
                     <div class="field" style="margin-bottom:16px;">
-                        <label
-                            style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">FECHA
-                            DE AUSENCIA</label>
+                        <label style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">FECHA DE AUSENCIA</label>
                         <input type="date" id="volJustFec" class="input">
                     </div>
                     <div class="field" style="margin-bottom:16px;">
-                        <label
-                            style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">MOTIVO</label>
+                        <label style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">MOTIVO</label>
                         <select id="volJustMot" class="input">
                             <option value="">Selecciona un motivo...</option>
                             <option value="Enfermedad">Enfermedad</option>
@@ -1361,18 +1358,45 @@
                         </select>
                     </div>
                     <div class="field" style="margin-bottom:16px;">
-                        <label
-                            style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">QUIÉN
-                            TE REEMPLAZARÁ (SUSTITUTO)</label>
+                        <label style="display:block;font-size:13px;font-weight:800;color:var(--text-muted);margin-bottom:8px;">QUIÉN TE REEMPLAZARÁ (SUSTITUTO)</label>
                         <div id="volJustSusGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:10px;"></div>
                         <input type="hidden" id="volJustSus" value="">
-                        <p style="font-size:10px; color:var(--text-muted); margin-top:6px; font-weight:700;">Selecciona
-                            al compañero que cubrirá tu grupo.</p>
+                        <p style="font-size:10px; color:var(--text-muted); margin-top:6px; font-weight:700;">Selecciona al compañero que cubrirá tu grupo.</p>
                     </div>
-                    <button class="btn btn-primary" onclick="volSubmitJustification()">💾 Enviar Justificación</button>
+                    <button class="btn btn-primary" onclick="volSubmitJustification()" style="padding:16px; font-size:15px;">💾 Enviar Justificación</button>
                 </div>
-                <button class="btn btn-ghost" onclick="showVolDashboard()" style="margin-top:10px;">Volver al
-                    panel</button>
+                <button class="btn btn-ghost" onclick="showVolDashboard()" style="margin-top:10px;">Volver al panel</button>
+            </div>
+
+            <!-- VOL-TOOLS (NUEVA VISTA DE GESTIÓN) -->
+            <div class="view" id="v-vol-tools">
+                <div style="text-align:center; margin-bottom:24px;">
+                    <h2 style="font-weight:900; font-size:24px; letter-spacing:-1px;">Gestión y Herramientas</h2>
+                    <p style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Accesos rápidos de voluntariado</p>
+                </div>
+                
+                <div style="display:grid; gap:16px;">
+                    <div class="card" onclick="vibe('CLICK'); volShowSearch('vol_query')" style="cursor:pointer; display:flex; align-items:center; gap:20px; padding:24px;">
+                        <div style="width:55px; height:55px; background:var(--primary-soft); border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:28px;">🔍</div>
+                        <div>
+                            <div style="font-weight:900; font-size:16px;">Buscar Horario</div>
+                            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Consultar horarios y ubicación del club</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card" onclick="vibe('CLICK'); volShowSearch('vol_move_kid')" style="cursor:pointer; display:flex; align-items:center; gap:20px; padding:24px;">
+                        <div style="width:55px; height:55px; background:var(--accent-soft); border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:28px;">🔄</div>
+                        <div>
+                            <div style="font-weight:900; font-size:16px;">Mover de Grupo</div>
+                            <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Cambios de horario definitivos para niños/as</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info" style="margin-top:30px;">
+                    <span>⚙️</span>
+                    <div style="font-size:11px; font-weight:700;">Estas herramientas requieren conexión para sincronizar los cambios realizados.</div>
+                </div>
             </div>
 
         </div>
@@ -1662,8 +1686,8 @@
             // --- LÓGICA DE DOCK PRO 2026 ---
             const dock = document.getElementById('vBottomNav');
             const cont = document.querySelector('.container');
-            const volViews = ['v-vol-feed', 'v-vol-dash', 'v-vol-search', 'v-vol-justification', 'v-vol-change-list', 'v-vol-just-form'];
-            const isVolView = volViews.some(vv => id === vv || id.startsWith('v-vol-search') || id.startsWith('v-vol-just'));
+            const volViews = ['v-vol-feed', 'v-vol-dash', 'v-vol-search', 'v-vol-justification', 'v-vol-change-list', 'v-vol-just-form', 'v-vol-tools'];
+            const isVolView = volViews.some(vv => id === vv || id.startsWith('v-vol-search') || id.startsWith('v-vol-just') || id.startsWith('v-vol-tools'));
 
             if (isVolView) {
                 if (dock) dock.classList.add('visible');
@@ -2806,6 +2830,18 @@
                 
                 centralBox.innerHTML = btnTomarAsistencia + groupsHtml;
                 list.appendChild(centralBox);
+
+                // BOTÓN DE JUSTIFICACIÓN (Debajo de los grupos)
+                var justBox = document.createElement('div');
+                justBox.className = 'card';
+                justBox.style.cssText = 'padding:20px; text-align:center; border:2px dashed var(--border); background:var(--bg); cursor:pointer; margin-top:10px;';
+                justBox.onclick = function() { vibe('CLICK'); volShowJustification(); };
+                justBox.innerHTML = `
+                    <div style="font-size:24px; margin-bottom:8px;">📝</div>
+                    <div style="font-weight:900; font-size:14px; color:var(--primary); text-transform:uppercase;">Justificar mi Inasistencia</div>
+                    <div style="font-size:11px; color:var(--text-muted); font-weight:700; margin-top:4px;">Informa si no podrás asistir a tus grupos.</div>
+                `;
+                list.appendChild(justBox);
             }
 
             // ── Renderizar Reportes Recientes (Respaldo Manual / Historial Nube) ──
@@ -3488,14 +3524,41 @@
             });
         }
 
+        // --- UTILIDAD COMPRESIÓN DE IMÁGENES ---
+        function compressImage(file, maxSize, quality, callback) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > height) {
+                        if (width > maxSize) { height *= maxSize / width; width = maxSize; }
+                    } else {
+                        if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    callback(canvas.toDataURL('image/jpeg', quality));
+                };
+            };
+        }
+
         // --- SUBIDA DE FOTO A LA COMUNIDAD ---
         function uploadComunidadFoto(event) {
             const file = event.target.files[0];
             if (!file) return;
-            const r = new FileReader();
-            showLoader("Subiendo foto al muro del club...");
-            r.onload = function(e) {
-                const b64 = e.target.result;
+            
+            showLoader("Optimizando y subiendo foto al muro...");
+            
+            compressImage(file, 1200, 0.7, function(b64) {
                 const volG = USER.grupos && USER.grupos.length > 0 ? USER.grupos[0] : 'General';
                 fetch(SCRIPT_URL, {
                     method: "POST",
@@ -3510,6 +3573,7 @@
                 .then(res => {
                     hideLoader();
                     if(res.ok) {
+                        vibe('SUCCESS');
                         triggerGamification("¡Genial! Tu foto fue compartida al club.");
                         setTimeout(() => volSyncSistema(), 1500);
                     } else {
@@ -3520,18 +3584,19 @@
                     hideLoader();
                     showToast("Error de red: " + err, true);
                 });
-            };
-            r.readAsDataURL(file);
-            if (document.getElementById('comFotoInp')) document.getElementById('comFotoInp').value = '';
+            });
+            if (document.getElementById('comFotoInpMuro')) document.getElementById('comFotoInpMuro').value = '';
         }
 
         function uploadVolProfile(event) {
             const file = event.target.files[0];
             if (!file) return;
-            const r = new FileReader();
-            r.onload = function(e) {
-                openCropModal(e.target.result, (cropped) => {
-                    showLoader("Actualizando tu foto de perfil...");
+            
+            showLoader("Optimizando foto de perfil...");
+            
+            compressImage(file, 800, 0.8, function(optimizedB64) {
+                openCropModal(optimizedB64, (cropped) => {
+                    showLoader("Actualizando tu foto oficial...");
                     fetch(SCRIPT_URL, {
                         method: "POST",
                         body: JSON.stringify({
@@ -3545,6 +3610,7 @@
                     .then(res => {
                         hideLoader();
                         if(res.ok) {
+                            vibe('SUCCESS');
                             triggerGamification("¡Listo! Foto de perfil guardada.");
                             USER.foto = res.fileUrl; 
                             var fileIdmatch = res.fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -3559,8 +3625,7 @@
                         showToast("Error de red: " + err, true);
                     });
                 });
-            };
-            r.readAsDataURL(file);
+            });
             if (document.getElementById('volProfileInp')) document.getElementById('volProfileInp').value = '';
         }
 
@@ -3893,19 +3958,13 @@
     </script>
     <!-- DOCK PRO 2026 (PREMIUM GLASS) -->
     <nav id="vBottomNav" class="bottom-nav">
-        <button class="nav-item" onclick="vibe('CLICK'); renderVolFeed(); showView('v-vol-feed', 'Muro', 'Novedades', false)" id="navFeed">
+        <button class="nav-item" onclick="vibe('CLICK'); renderVolFeed(); showView('v-vol-feed', 'Muro Social', 'Comunidad 2026', false)" id="navFeed">
             <i>◈</i> <span>Muro</span>
         </button>
         <button class="nav-item" onclick="vibe('CLICK'); showVolDashboard()" id="navHome">
             <i>⊞</i> <span>Grupos</span>
         </button>
-        <button class="nav-item" onclick="vibe('CLICK'); volShowSearch('vol_query')" id="navSearch">
-            <i>◎</i> <span>Buscar</span>
-        </button>
-        <button class="nav-item" onclick="vibe('CLICK'); volShowJustification()" id="navJustify">
-            <i>◇</i> <span>Justificar</span>
-        </button>
-        <button class="nav-item" onclick="vibe('CLICK'); volShowSearch('vol_move_kid')" id="navManage">
+        <button class="nav-item" onclick="vibe('CLICK'); showView('v-vol-tools', 'Gestión', 'Herramientas Pro', false)" id="navTools">
             <i>⚙</i> <span>Gestión</span>
         </button>
     </nav>
