@@ -720,58 +720,110 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 65px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid var(--border);
+            height: 70px;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border-top: 1px solid rgba(255,255,255,0.4);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            z-index: 1000;
-            padding: 0 5px env(safe-area-inset-bottom) 5px;
+            z-index: 9999;
+            padding: 0 10px env(safe-area-inset-bottom) 10px;
             transform: translateY(100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+        }
+
+        .bottom-nav.visible {
+            transform: translateY(0);
         }
 
         .nav-item {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
             min-width: 0;
-            font-size: 9px;
-            letter-spacing: 0;
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
         }
 
         .nav-item i {
-            font-size: 20px;
+            font-size: 22px;
+            font-style: normal;
         }
 
-        /* ── TIMELINE / MURO ── */
         .timeline-card {
             background: white;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
             position: relative;
-            overflow: hidden;
         }
 
         .activity-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--primary);
+            width: 10px;
+            height: 10px;
+            background: #10b981;
             border-radius: 50%;
             display: inline-block;
-            margin-right: 8px;
-            box-shadow: 0 0 10px var(--primary-glow);
+            margin-right: 10px;
+            box-shadow: 0 0 10px rgba(16,185,129,0.3);
         }
 
         .feed-photo {
             width: 100%;
-            height: 180px;
-            object-fit:cover;
-            border-radius: 12px;
-            margin-top: 10px;
-            background: #f1f5f9;
+            height: auto;
+            aspect-ratio: 4/5;
+            object-fit: cover;
+            border-radius: 16px;
+            margin-top: 15px;
+            background: #f8fafc;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .social-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .like-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: #94a3b8;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.2s;
+        }
+
+        .like-btn.active {
+            color: #ef4444;
+            transform: scale(1.1);
+        }
+        
+        .like-names {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
         }
 
         .nav-item.active {
@@ -1147,7 +1199,6 @@
             <!-- VOL-LOGIN -->
             <div class="view v-centered-view" id="v-vol-login">
                 <div style="text-align:center; margin-bottom:40px;">
-                    <div style="font-size:48px; margin-bottom:20px; filter:drop-shadow(0 10px 15px var(--primary-glow));">⚡</div>
                     <h2 style="font-weight:900; font-size:28px; letter-spacing:-1px;">Acceso Voluntariado</h2>
                     <p style="font-size:14px; color:var(--text-muted); font-weight:700; margin-top:8px;">Protocolo de seguridad CI activo</p>
                 </div>
@@ -1188,14 +1239,20 @@
                 <p style="text-align:center; font-size:11px; font-weight:700; color:var(--text-muted); opacity:0.8;">Tus datos están protegidos por la política de CI.</p>
             </div>
 
-            <!-- VOL-FEED (MURO DE NOVEDADES) - NUEVO PANTALLA INICIAL -->
+            <!-- VOL-FEED (MURO DE NOVEDADES SOCIAL) -->
             <div class="view" id="v-vol-feed">
-                <div style="margin-bottom:20px; text-align:center;">
-                    <h2 style="font-weight:900; font-size:24px;">Muro del Club</h2>
-                    <p style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-top:5px;">Novedades en tiempo real</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding:0 10px;">
+                    <div>
+                        <h2 style="font-weight:900; font-size:26px; letter-spacing:-1px;">Muro Social</h2>
+                        <p style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Vida del Club ≋ 2026</p>
+                    </div>
+                    <button onclick="vibe('CLICK'); document.getElementById('comFotoInpMuro').click()" style="background:var(--primary); color:white; border:none; border-radius:15px; width:45px; height:45px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; box-shadow:var(--shadow-lg);">
+                        +
+                    </button>
+                    <input type="file" id="comFotoInpMuro" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">
                 </div>
-                <div id="feedContent" style="display:grid; gap:12px;">
-                    <!-- Actividad inyectada vía JS -->
+                <div id="feedContent" style="display:grid; gap:20px;">
+                    <!-- Actividad e Interacciones inyectadas vía JS -->
                 </div>
             </div>
 
@@ -1217,10 +1274,10 @@
                 <input type="file" id="volProfileInp" accept="image/*" style="display:none" onchange="uploadVolProfile(event)">
                 
                 <div style="margin:20px 0 12px; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase;">Control de Grupos</span>
-                    <button onclick="syncDB()" style="background:none; border:none; color:var(--primary); font-size:12px; font-weight:900; cursor:pointer;">Actualizar Datos</button>
+                    <span style="font-size:13px; font-weight:900; color:var(--text); text-transform:uppercase;">Panel de Asistencia</span>
+                    <button onclick="vibe('CLICK'); syncDB()" style="background:none; border:none; color:var(--primary); font-size:12px; font-weight:900; cursor:pointer;">Sincronizar Datos</button>
                 </div>
-                <div id="volGroupsList" style="display:grid; gap:10px;"></div>
+                <div id="volGroupsList" style="display:grid; gap:12px;"></div>
             </div>
 
             <!-- VOL-ATTENDANCE -->
@@ -1231,8 +1288,8 @@
                         <div style="font-size:10px; font-weight:800; opacity:0.8; text-transform:uppercase;">NIÑOS PRESENTES</div>
                         <div style="font-size:24px; font-weight:900;" id="attCounter">0</div>
                     </div>
-                    <button class="btn btn-primary" style="background:#22c55e; width:auto; padding:8px 16px; font-size:14px;" onclick="volSaveAttendance()">Guardar ✅</button>
-                    <button class="btn btn-outline" onclick="showVolDashboard()" style="background:rgba(255,255,255,0.1); border:none; color:white; width:auto; padding:8px 12px; font-size:11px;">← VOLVER</button>
+                    <button class="btn btn-primary" style="background:#22c55e; width:auto; padding:8px 16px; font-size:14px;" onclick="volSaveAttendance()">Guardar Cambios</button>
+                    <button class="btn btn-outline" onclick="showVolDashboard()" style="background:rgba(255,255,255,0.1); border:none; color:white; width:auto; padding:8px 12px; font-size:11px;">VOLVER</button>
                 </div>
                 <!-- Panel de voluntarios presentes -->
                 <div id="attTeamGridContainer" style="margin-bottom:16px;">
@@ -1407,13 +1464,13 @@
 
             <div style="display:grid; gap:16px;">
                 <div class="att-choice-card primary" onclick="volProceedOfficial()">
-                    <div style="font-size:40px;">🚀</div>
+                    <div style="font-weight:900; font-size:14px; text-transform:uppercase; letter-spacing:1px; opacity:0.8; margin-bottom:8px;">Protocolo</div>
                     <div style="font-weight:900; font-size:18px;">Sistema Oficial de Children</div>
                     <p style="font-size:12px; font-weight:700; color:var(--text-muted);">Usa esta vía si tienes el acceso externo. No requiere marcar nombres en esta app.</p>
                 </div>
 
                 <div class="att-choice-card warning" onclick="volProceedManual()">
-                    <div style="font-size:40px;">⚠️</div>
+                    <div style="font-weight:900; font-size:14px; text-transform:uppercase; letter-spacing:1px; opacity:0.8; margin-bottom:8px;">Respaldo</div>
                     <div style="font-weight:900; font-size:18px;">Registro de Emergencia / Respaldo</div>
                     <p style="font-size:12px; font-weight:700; color:var(--text-muted);">Usa esta vía si el encargado oficial no asistió. Podrás generar una imagen de respaldo.</p>
                 </div>
@@ -1428,7 +1485,7 @@
             
             <div style="display:grid; gap:10px;">
                 <button class="btn btn-primary" onclick="shareSummaryWhatsApp()">
-                    <span>📱</span> Compartir por WhatsApp
+                    Compartir por WhatsApp
                 </button>
                 <button class="btn btn-outline" onclick="goHome()">
                     🏠 Volver al Inicio
@@ -1602,23 +1659,22 @@
             btn.style.display = showBack ? 'flex' : 'none';
             btn.onclick = backFn ? backFn : function () { history.back(); };
 
-            // --- LÓGICA DE DOCK PRO 2026 (VISIBILIDAD Y ESTADO) ---
+            // --- LÓGICA DE DOCK PRO 2026 ---
             const dock = document.getElementById('vBottomNav');
             const cont = document.querySelector('.container');
             const volViews = ['v-vol-feed', 'v-vol-dash', 'v-vol-search', 'v-vol-justification', 'v-vol-change-list', 'v-vol-just-form'];
             const isVolView = volViews.some(vv => id === vv || id.startsWith('v-vol-search') || id.startsWith('v-vol-just'));
 
-            if (USER && USER.rol && isVolView) {
+            if (isVolView) {
                 if (dock) dock.classList.add('visible');
                 if (cont) cont.classList.add('nav-active');
                 
-                // Actualizar estado activo
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                if (id === 'v-vol-feed') document.getElementById('navFeed').classList.add('active');
-                if (id === 'v-vol-dash') document.getElementById('navHome').classList.add('active');
-                if (id === 'v-vol-search') document.getElementById('navSearch').classList.add('active');
-                if (id === 'v-vol-justification' || id === 'v-vol-just-form') document.getElementById('navJustify').classList.add('active');
-                if (id === 'v-vol-change-list') document.getElementById('navManage').classList.add('active');
+                if (id === 'v-vol-feed') document.getElementById('navFeed')?.classList.add('active');
+                if (id === 'v-vol-dash') document.getElementById('navHome')?.classList.add('active');
+                if (id === 'v-vol-search') document.getElementById('navSearch')?.classList.add('active');
+                if (id === 'v-vol-justification' || id === 'v-vol-just-form') document.getElementById('navJustify')?.classList.add('active');
+                if (id === 'v-vol-change-list') document.getElementById('navManage')?.classList.add('active');
             } else {
                 if (dock) dock.classList.remove('visible');
                 if (cont) cont.classList.remove('nav-active');
@@ -2430,8 +2486,7 @@
         // --- MÓDULO VOLUNTARIOS ---
         function initVoluntarios() {
             if (USER && USER.encontrado) {
-                renderVolFeed();
-                showView('v-vol-feed', 'Muro', 'Novedades', false);
+                showVolDashboard();
             } else {
                 var saved = localStorage.getItem('volCreds');
                 if (saved) {
@@ -2474,8 +2529,7 @@
                         showView('v-vol-registro', 'Registro de Seguridad', 'Completa tus datos');
                     } else {
                         localStorage.setItem('volCreds', JSON.stringify({ u: u, p: p }));
-                        renderVolFeed();
-                        showView('v-vol-feed', 'Muro', 'Novedades', false);
+                        showVolDashboard();
                     }
                 } else {
                     localStorage.removeItem('volCreds');
@@ -2525,66 +2579,102 @@
             document.body.appendChild(sc);
         }
 
+        var VOL_LIKES = JSON.parse(localStorage.getItem('VOL_LIKES') || '{}');
+
+        function volToggleLike(id) {
+            vibe('CLICK');
+            if (!VOL_LIKES[id]) VOL_LIKES[id] = [];
+            var idx = VOL_LIKES[id].indexOf(USER.nombre);
+            if (idx === -1) VOL_LIKES[id].push(USER.nombre);
+            else VOL_LIKES[id].splice(idx, 1);
+            localStorage.setItem('VOL_LIKES', JSON.stringify(VOL_LIKES));
+            renderVolFeed();
+        }
+
         function renderVolFeed() {
             const cont = document.getElementById('feedContent');
+            if (!cont) return;
             cont.innerHTML = '';
 
-            // 1. Obtener Historial Global (si no hay, usar locales)
             let rawHistory = (APP_DB.asistencia_metrics && APP_DB.asistencia_metrics.historial_global) ? [...APP_DB.asistencia_metrics.historial_global] : [];
-            
-            // 2. Obtener fotos de comunidad
             let photos = (APP_DB.comunidad_fotos) ? [...APP_DB.comunidad_fotos] : [];
 
-            // 3. Unificar y ordenar por fecha (simplificado para MVP)
-            // Se asume que el historial global ya viene ordenado
-            let history = rawHistory.slice(0, 5); // Solo últimos 5 eventos para no saturar
+            // Mezclar y ordenar cronológicamente
+            let combined = [];
+            rawHistory.slice(0, 10).forEach(h => combined.push({...h, type: 'activity', ts: new Date(h.fecha).getTime() || 0}));
+            photos.slice(-15).forEach(p => combined.push({...p, type: 'photo', ts: new Date(p.fecha).getTime() || 0}));
+            combined.sort((a,b) => (b.ts || 0) - (a.ts || 0));
 
-            if (history.length === 0 && photos.length === 0) {
-                cont.innerHTML = '<div class="alert alert-info">Aún no hay actividad reciente en el club.</div>';
+            if (combined.length === 0) {
+                cont.innerHTML = '<div class="alert alert-info" style="text-align:center;">Aún no hay actividad reciente. <br> ¡Sé el primero en marcar asistencia o subir una foto!</div>';
                 return;
             }
 
-            // Renderizar Historial
-            history.forEach(h => {
+            combined.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'timeline-card';
-                card.innerHTML = `
-                    <div style="font-size:12px; font-weight:900; color:var(--primary); margin-bottom:4px;">
-                        <span class="activity-dot"></span>${h.voluntario.split(' ')[0]} pasó asistencia
-                    </div>
-                    <div style="font-size:14px; font-weight:700;">Grupo: ${h.grupo}</div>
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Asistieron ${h.asistentes.length || 0} niños · ${h.fecha}</div>
-                `;
+                const id = (item.type === 'photo' ? item.url : (item.voluntario + item.fecha + item.grupo));
+                const likes = VOL_LIKES[id] || [];
+                const isLiked = likes.indexOf(USER.nombre) !== -1;
+                const authorsName = (item.type === 'photo' ? item.vol : item.voluntario);
+                
+                let likeText = "";
+                if (likes.length > 0) {
+                    if (likes.length === 1) likeText = `A ${likes[0]} le gusta esto`;
+                    else if (likes.length === 2) likeText = `A ${likes[0]} y ${likes[1]} les gusta esto`;
+                    else likeText = `A ${likes[0]}, ${likes[1]} y ${likes.length-2} más...`;
+                }
+
+                if (item.type === 'activity') {
+                    card.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+                            <div style="width:42px; height:42px; border-radius:14px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">${authorsName.charAt(0)}</div>
+                            <div>
+                                <div style="font-size:15px; font-weight:900; color:var(--text);">${authorsName}</div>
+                                <div style="font-size:10px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.5px;">Actualización de Asistencia</div>
+                            </div>
+                        </div>
+                        <div style="background:#f8fafc; border-radius:14px; padding:15px; font-size:14px; font-weight:700; color:var(--text); line-height:1.4; border:1px solid #f1f5f9;">
+                            ${authorsName.split(' ')[0]} registró la asistencia del grupo <span style="color:var(--primary); border-bottom:2px solid var(--primary-soft);">${item.grupo}</span> con éxito.
+                        </div>
+                        <div class="social-actions" style="margin-top:15px; display:flex; align-items:center; gap:12px;">
+                            <button class="like-btn ${isLiked?'active':''}" onclick="volToggleLike('${id}')" style="display:flex; align-items:center; gap:5px; background:none; border:none; cursor:pointer;">
+                                <span style="font-size:22px;">${isLiked?'❤️':'♡'}</span>
+                            </button>
+                            <span class="like-names" style="font-size:12px; font-weight:700; color:var(--text-muted);">${likeText}</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:12px; font-weight:700; text-align:right;">${item.fecha}</div>
+                    `;
+                } else {
+                    var fileIdmatch = item.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    var parsedId = fileIdmatch ? fileIdmatch[1] : '';
+                    var cUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w800' : item.url;
+                    
+                    card.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+                            <div style="width:42px; height:42px; border-radius:14px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--accent); font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">${authorsName.charAt(0)}</div>
+                            <div>
+                                <div style="font-size:15px; font-weight:900; color:var(--text);">${authorsName}</div>
+                                <div style="font-size:10px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.5px;">Compartió un Recuerdo</div>
+                            </div>
+                        </div>
+                        <img src="${cUrl}" class="feed-photo" style="cursor:zoom-in; width:100%; border-radius:16px;" onclick="vibe('CLICK'); window.open('${item.url}', '_blank')">
+                        <div style="font-size:15px; font-weight:800; color:var(--text); margin-top:12px;">${item.grupo || 'Niños del Club'}</div>
+                        <div class="social-actions" style="margin-top:15px; display:flex; align-items:center; gap:12px;">
+                            <button class="like-btn ${isLiked?'active':''}" onclick="volToggleLike('${id}')" style="display:flex; align-items:center; gap:5px; background:none; border:none; cursor:pointer;">
+                                <span style="font-size:22px;">${isLiked?'❤️':'♡'}</span>
+                            </button>
+                            <span class="like-names" style="font-size:12px; font-weight:700; color:var(--text-muted);">${likeText}</span>
+                        </div>
+                        <div style="font-size:10px; color:var(--text-muted); margin-top:12px; font-weight:700; text-align:right;">${item.fecha}</div>
+                    `;
+                }
                 cont.appendChild(card);
             });
-
-            // Renderizar Fotos
-            if (photos.length > 0) {
-                 const photoSection = document.createElement('div');
-                 photoSection.innerHTML = '<div style="font-size:11px; font-weight:900; color:var(--text-muted); margin:10px 0 10px; text-transform:uppercase;">Fotos de la comunidad</div>';
-                 cont.appendChild(photoSection);
-
-                 photos.slice(-3).reverse().forEach(cf => {
-                    const card = document.createElement('div');
-                    card.className = 'timeline-card';
-                    var fileIdmatch = cf.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                    var parsedId = fileIdmatch ? fileIdmatch[1] : '';
-                    var cUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w600' : '';
-
-                    card.innerHTML = `
-                        <div style="font-size:12px; font-weight:900; color:var(--accent); margin-bottom:8px;">${cf.vol.split(' ')[0]} compartió un recuerdo</div>
-                        <img src="${cUrl}" class="feed-photo">
-                        <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-top:8px;">${cf.grupo} · ${cf.fecha}</div>
-                    `;
-                    cont.appendChild(card);
-                 });
-            }
         }
 
         function showVolDashboard() {
-            // Refrescar Feed por seguridad si se entra desde el dock
             renderVolFeed();
-            // Coordinador o TODOS -> ver todos los grupos de la BD
             var esCoord = (USER.rol === 'coordinador' || USER.rol === 'admin');
             var gruposUser = [];
             var userPpsList = USER.pps ? String(USER.pps).split(',').map(function (x) { return x.trim(); }).filter(Boolean) : [];
@@ -2592,20 +2682,17 @@
             gruposUser = APP_DB.grupos.filter(function (g) {
                 if (esCoord || (USER.grupos && USER.grupos.indexOf('TODOS') >= 0) || userPpsList.indexOf('TODOS') >= 0) return true;
                 if (USER.grupos && USER.grupos.indexOf(g.g) >= 0) return true;
-                // Match by PPS (lugar or club code)
                 var matchesPps = userPpsList.some(function (ppsStr) {
                     var translatedPps = PPS_MAP[ppsStr.toUpperCase()] || ppsStr;
                     var lPps = translatedPps.toLowerCase();
                     var lRawPps = ppsStr.toLowerCase();
-
                     return (g.lugar && g.lugar.toLowerCase().includes(lPps)) ||
-                        (g.club && g.club.toLowerCase().includes(lRawPps)) ||
-                        (g.g && g.g.toLowerCase().includes(lRawPps));
+                           (g.club && g.club.toLowerCase().includes(lRawPps)) ||
+                           (g.g && g.g.toLowerCase().includes(lRawPps));
                 });
                 return matchesPps;
             }).map(function (g) { return g.g; });
 
-            // Remove duplicates and sort
             gruposUser = gruposUser.filter(function (item, pos) { return gruposUser.indexOf(item) == pos; });
 
             document.getElementById('botFabVol').style.display = 'flex';
@@ -2616,14 +2703,12 @@
                 var fileIdmatch = USER.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
                 imgEl.src = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=w200' : USER.foto;
             } else {
-                imgEl.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="%23cbd5e1"/><text x="50" y="50" font-family="Arial" font-size="45" font-weight="bold" fill="white" dominant-baseline="central" text-anchor="middle">' + USER.nombre.charAt(0).toUpperCase() + '</text></svg>';
+                imgEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(USER.nombre) + '&background=1e3a8a&color=fff';
             }
             document.getElementById('volGroupCount').textContent = gruposUser.length;
 
             var list = document.getElementById('volGroupsList');
             list.innerHTML = '';
-
-            // Ya no inyectamos hdr aquí (era redundante y antiguo)
 
             if (esCoord) {
                 var m = APP_DB.asistencia_metrics || { total: 0, porSector: {}, porEdad: {}, porGrupo: {} };
@@ -2646,67 +2731,13 @@
                     + '<div style="background:rgba(0,0,0,0.15); border-radius:8px; padding:8px 12px; margin-top:12px; font-size:12px; font-weight:700; display:flex; justify-content:space-between;">'
                     + '<span>🎂 Edad con más asistencia:</span> <span style="font-weight:900; color:#fbbf24;">' + bestAge + ' años</span>'
                     + '</div>'
-                    + '<button onclick="showView(\'v-admin-dash\', \'Centro de Mando\', \'Panel Admin\', true, goHome);" style="margin-top:12px; width:100%; background:white; color:#1e3a8a; border:none; border-radius:10px; padding:12px; font-size:13px; font-weight:900; cursor:pointer;">⚙️ Abrir Herramientas Analíticas</button>';
+                    + '<button onclick="showView(\'v-admin-dash\', \'Centro de Mando\', \'Panel Admin\', true, goHome);" style="margin-top:12px; width:100%; background:white; color:#1e3a8a; border:none; border-radius:10px; padding:12px; font-size:13px; font-weight:900; cursor:pointer;">Abrir Herramientas Analíticas</button>';
                 list.appendChild(adminDiv);
             }
 
             if (gruposUser.length === 0) {
                 list.innerHTML += '<div class="alert alert-warn"><span>⚠️</span><div>No tienes grupos asignados. Contacta al coordinador.</div></div>';
             }
-
-            // ── Renderizar Top 10 Fotos de Comunidad ──
-            var comDiv = document.createElement('div');
-            comDiv.style.cssText = 'margin-bottom:20px;';
-            comDiv.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:0 5px;">
-                    <div style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase; letter-spacing:1px;">Muro del Club</div>
-                    <button onclick="document.getElementById('comFotoInp').click()" style="background:var(--primary); color:white; border:none; border-radius:12px; padding:8px 16px; font-size:11px; font-weight:900; cursor:pointer; box-shadow:var(--shadow);">Subir Recuerdo</button>
-                </div>
-                <input type="file" id="comFotoInp" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">
-                <div id="comFotoFeed"></div>
-            `;
-            list.appendChild(comDiv);
-
-            setTimeout(() => {
-                var feed = comDiv.querySelector('#comFotoFeed');
-                if (APP_DB.comunidad_fotos && APP_DB.comunidad_fotos.length > 0) {
-                    var diezFotos = APP_DB.comunidad_fotos.slice(-12).reverse(); // Subimos a 12 para más variedad
-                    diezFotos.forEach(function(cf) {
-                        var fileIdmatch = cf.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                        var parsedId = fileIdmatch ? fileIdmatch[1] : '';
-                        var cUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w600' : '';
-                        
-                        var card = document.createElement('div');
-                        card.className = 'mural-card';
-                        card.onclick = function() {
-                            vibe('CLICK');
-                            var imgModal = document.getElementById('fullImgModal');
-                            var hideBtn = '<div onclick="document.getElementById(\'fullImgModal\').style.display=\'none\'" style="margin-top:20px; background:rgba(255,255,255,0.2); color:white; padding:12px 24px; border-radius:12px; font-size:14px; font-weight:900; cursor:pointer;">Cerrar</div>';
-                            imgModal.innerHTML = '<div style="max-width:90%; animation:popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; flex-direction:column; align-items:center;">'
-                                + '<img src="' + cUrl + '" style="width:100%; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">'
-                                + '<div style="color:white; font-size:15px; font-weight:900; margin-top:15px; text-align:center; text-shadow:0 2px 4px rgba(0,0,0,0.3);">' + cf.vol + ' <br> <span style="font-weight:600; font-size:12px; opacity:0.8;">' + cf.grupo + ' · ' + cf.fecha + '</span></div>'
-                                + hideBtn
-                                + '</div>';
-                            imgModal.style.display = 'flex';
-                        };
-
-                        card.innerHTML = `
-                            <img src="${cUrl}" style="width:100%; height:100%; object-fit:cover;">
-                            <div class="mural-badge">MEMORIA</div>
-                            <div class="mural-overlay">
-                                <span style="font-size:13px; font-weight:900; color:white;">${cf.vol.split(' ')[0]}</span>
-                                <span style="font-size:10px; font-weight:600; color:rgba(255,255,255,0.7);">${cf.grupo}</span>
-                            </div>
-                        `;
-                        feed.appendChild(card);
-                    });
-                } else {
-                    feed.innerHTML = '<div style="flex:1; background:#f8fafc; padding:15px; border-radius:12px; border:2px dashed var(--border); text-align:center; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;">'
-                    + '<span style="font-size:24px;">📸</span>'
-                    + '<span style="font-size:11px; font-weight:800; color:var(--text-muted);">Aún no hay fotos esta semana. ¡Sé el primero/a!</span>'
-                    + '</div>';
-                }
-            }, 0);
 
             // ── Banner de Reporte Pendiente (Resiliencia) ──
             var draft = localStorage.getItem('DRAFT_ATT');
@@ -3843,6 +3874,14 @@
 
         function norm(s) { return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
         
+        function vibe(type) {
+            if (!navigator.vibrate) return;
+            if (type === 'CLICK') navigator.vibrate(15);
+            if (type === 'SUCCESS') navigator.vibrate([20, 40, 20]);
+            if (type === 'ERROR') navigator.vibrate([60, 60, 60]);
+            if (type === 'MAGIC') navigator.vibrate([30, 50, 30, 50, 30]);
+        }
+
         window.onload = function() {
             syncDB();
             const botFab = document.getElementById('botFab');
@@ -3852,22 +3891,22 @@
             if (botFabVol) makeDraggable(botFabVol);
         };
     </script>
-    <!-- DOCK PRO 2026 (5 ITEMS) -->
+    <!-- DOCK PRO 2026 (PREMIUM GLASS) -->
     <nav id="vBottomNav" class="bottom-nav">
         <button class="nav-item" onclick="vibe('CLICK'); renderVolFeed(); showView('v-vol-feed', 'Muro', 'Novedades', false)" id="navFeed">
-            <i>≋</i> <span>Muro</span>
+            <i>◈</i> <span>Muro</span>
         </button>
         <button class="nav-item" onclick="vibe('CLICK'); showVolDashboard()" id="navHome">
-            <i>⌂</i> <span>Grupos</span>
+            <i>⊞</i> <span>Grupos</span>
         </button>
         <button class="nav-item" onclick="vibe('CLICK'); volShowSearch('vol_query')" id="navSearch">
-            <i>🔍</i> <span>Horarios</span>
+            <i>◎</i> <span>Buscar</span>
         </button>
         <button class="nav-item" onclick="vibe('CLICK'); volShowJustification()" id="navJustify">
-            <i>📝</i> <span>Justificar</span>
+            <i>◇</i> <span>Justificar</span>
         </button>
         <button class="nav-item" onclick="vibe('CLICK'); volShowSearch('vol_move_kid')" id="navManage">
-            <i>⚙️</i> <span>Gestión</span>
+            <i>⚙</i> <span>Gestión</span>
         </button>
     </nav>
 </body>
