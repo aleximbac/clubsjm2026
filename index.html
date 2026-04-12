@@ -2744,7 +2744,7 @@
             }
 
             let combined = [];
-            // Eliminamos rawHistory para evitar confusión con posts automáticos de asistencia.
+            rawHistory.slice(0, 10).forEach(h => combined.push({...h, type: 'activity', ts: parseFecha(h.fecha), pinned: "NO"}));
             photos.forEach(p => combined.push({...p, type: 'photo', ts: parseFecha(p.fecha)}));
             
             combined = combined.filter(item => {
@@ -2797,9 +2797,31 @@
                 let badgeColor = (rLow.includes('coordinador') || rLow.includes('admin')) ? 'var(--accent)' : 'var(--primary)';
                 let roleBadge = `<span style="font-size:9px; background:${badgeColor}; color:white; padding:2px 6px; border-radius:6px; margin-left:6px; text-transform:uppercase; font-weight:900;">${role}</span>`;
 
+                let gText = item.grupo === 'General' ? 'TODOS' : item.grupo;
                 let likeText = likes.length > 0 ? (likes.length === 1 ? `Le gusta a ${likes[0]}` : `A ${likes[0]} y ${likes.length-1} más...`) : "";
 
-                if (item.type === 'photo') { 
+                if (item.type === 'activity') {
+                    // --- ESTILO SOCIAL PARA ASISTENCIAS ---
+                    card.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                            <div style="width:40px; height:40px; border-radius:12px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); overflow:hidden; border:1px solid var(--border);">${authorPic}</div>
+                            <div style="flex:1;">
+                                <div style="font-size:14px; font-weight:900; display:flex; align-items:center;">${authorsName}${roleBadge}</div>
+                                <div style="font-size:10px; color:var(--text-muted); font-weight:700;">${item.fecha}</div>
+                            </div>
+                        </div>
+                        <div style="background:#f0f9ff; border-radius:14px; padding:16px; border:1px solid #bae6fd; display:flex; align-items:center; gap:12px; word-break:break-word;">
+                            <span style="font-size:24px;">✅</span>
+                            <div style="font-size:14px; font-weight:700; color:#0369a1; line-height:1.3;">
+                                Tomó asistencia exitosa para:<br>
+                                <span style="color:var(--primary); font-size:16px;">${gText}</span>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+                             <button onclick="volHidePost('${id}')" style="background:none; border:none; color:var(--text-muted); font-size:11px; font-weight:700; cursor:pointer;">Ocultar</button>
+                        </div>
+                    `;
+                } else if (item.type === 'photo') { 
                     // PHOTO / TEXT POST
                     var bodyHtml = '';
                     if (item.url) {
@@ -2808,24 +2830,26 @@
                         bodyHtml = `<img src="${cUrl}" style="width:100%; border-radius:14px; margin-top:10px; cursor:zoom-in;" onclick="window.open('${item.url}', '_blank')">`;
                     }
                     
-                    // Si es solo texto, le damos un estilo más "premium"
+                    // Si es solo texto, le damos un estilo más "premium" y RESPONSIVO
                     let textStyle = item.url ? 'margin-top:12px; font-size:14px;' : 'margin-top:10px; font-size:17px; background:var(--bg); padding:16px; border-radius:14px; border:1px dashed var(--border);';
                     
                     if (item.texto) {
-                        bodyHtml += `<div style="${textStyle} font-weight:700; line-height:1.4; color:var(--text);">${item.texto}</div>`;
+                        bodyHtml += `<div style="${textStyle} font-weight:700; line-height:1.4; color:var(--text); word-break:break-word; overflow-wrap:break-word;">${item.texto}</div>`;
                     }
-
                     
                     card.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px; position:relative;">
                             <div style="width:40px; height:40px; border-radius:12px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); overflow:hidden; border:1px solid var(--border);">${authorPic}</div>
-                            <div style="flex:1;">
-                                <div style="font-size:14px; font-weight:900; display:flex; align-items:center;">${authorsName}${roleBadge} ${pinBtn}</div>
-                                <div style="font-size:10px; color:var(--text-muted); font-weight:700;">${item.fecha} · ${item.grupo}</div>
+                            <div style="flex:1; overflow:hidden;">
+                                <div style="font-size:14px; font-weight:900; display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                                    <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${authorsName}${roleBadge}</div>
+                                    ${pinBtn}
+                                </div>
+                                <div style="font-size:10px; color:var(--text-muted); font-weight:700;">${item.fecha} · ${gText}</div>
                             </div>
                         </div>
                         ${bodyHtml}
-                        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between;">
+                        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
                             <div onclick="volToggleLike('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
                                 <span style="font-size:20px;">${isLiked?'❤️':'♡'}</span>
                                 <span style="font-size:11px; font-weight:800; color:var(--text-muted);">${likeText}</span>
