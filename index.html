@@ -2753,7 +2753,8 @@
                 return;
             }
 
-            var isCoord = USER && (USER.rol === 'coordinador' || USER.rol === 'admin');
+            var userRol = (USER && USER.rol) ? USER.rol.toLowerCase() : "";
+            var isCoord = userRol.includes('coordinador') || userRol.includes('admin');
 
             combined.forEach(item => {
                 const card = document.createElement('div');
@@ -2779,7 +2780,8 @@
                     pinBtn = `<button onclick="volTogglePin('${id}', '${item.pinned}')" style="background:${item.pinned==='SI'?'var(--accent)':'#f1f5f9'}; color:${item.pinned==='SI'?'white':'#64748b'}; border:none; border-radius:8px; padding:4px 8px; font-size:10px; font-weight:800; cursor:pointer; margin-left:auto;">${item.pinned==='SI'?'📌 FIJADO':'📍 FIJAR'}</button>`;
                 }
 
-                let badgeColor = role === 'coordinador' || role === 'admin' ? 'var(--accent)' : 'var(--primary)';
+                let rLow = role.toLowerCase();
+                let badgeColor = (rLow.includes('coordinador') || rLow.includes('admin')) ? 'var(--accent)' : 'var(--primary)';
                 let roleBadge = `<span style="font-size:9px; background:${badgeColor}; color:white; padding:2px 6px; border-radius:6px; margin-left:6px; text-transform:uppercase; font-weight:900;">${role}</span>`;
 
                 let likeText = likes.length > 0 ? (likes.length === 1 ? `Le gusta a ${likes[0]}` : `A ${likes[0]} y ${likes.length-1} más...`) : "";
