@@ -740,6 +740,32 @@
             transform: translateY(0);
         }
 
+        /* INDICADOR DE SINCRONIZACIÓN */
+        #syncBadge {
+            position: fixed;
+            top: 10px;
+            right: 15px;
+            z-index: 9999;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(8px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        #syncBadge.syncing { border-color: #f59e0b; color: #b45309; }
+        #syncBadge.synced { border-color: #10b981; color: #047857; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .dot-pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
         .nav-item {
             flex: 1;
             display: flex;
@@ -887,6 +913,12 @@
 </head>
 
 <body>
+    <!-- INDICADOR GLOBAL DE ESTADO -->
+    <div id="syncBadge" class="synced">
+        <div class="dot dot-pulse"></div>
+        <span id="syncText">Sincronizado</span>
+    </div>
+
 
     <header id="mainHeader" style="display:flex; align-items:center; padding:12px 16px; background:white; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1001; min-height:64px;">
         <button id="backBtn" style="background:none; border:none; font-size:20px; color:var(--text); cursor:pointer; width:40px; text-align:left; display:none;">←</button>
@@ -1815,44 +1847,53 @@
             if (role === 'admin') initAdmin();
         }
 
-        function syncDB() {
+        function updateSyncUI(status) {
+            const b = document.getElementById('syncBadge');
+            const t = document.getElementById('syncText');
+            if(!b || !t) return;
+            if(status === 'SYNCING') {
+                b.className = 'syncing';
+                t.textContent = 'Sincronizando...';
+            } else {
+                b.className = 'synced';
+                t.textContent = 'Sincronizado';
+            }
+        }
+
+        function syncDB(cb_opt) {
+            updateSyncUI('SYNCING');
             var cb = 'cb_sync_' + Date.now();
             window[cb] = function (d) {
+                updateSyncUI('SYNCED');
                 if (d.ok) {
                     APP_DB = d;
+                    localStorage.setItem('APP_DB_CACHE', JSON.stringify(d));
                     if (d.pps_config) PPS_MAP = d.pps_config;
+
+                    // Refresco Automático de Vistas (Cero esperas)
+                    if (document.getElementById('v-vol-dash').classList.contains('active')) showVolDashboard();
+                    if (document.getElementById('v-vol-feed').classList.contains('active')) renderVolFeed();
 
                     // --- Sincronización en la Nube de Reportes ---
                     if (d.asistencia_metrics && d.asistencia_metrics.historial_global && USER) {
                         var serverHistory = d.asistencia_metrics.historial_global.filter(h => h.voluntario === USER.nombre);
-                        
-                        // Unir con locales evitando duplicados (mismo grupo y fecha)
                         serverHistory.forEach(sRep => {
                             var exists = RECENT_REPORTS.some(lRep => lRep.grupo === sRep.grupo && lRep.fecha === sRep.fecha);
-                            if (!exists) {
-                                RECENT_REPORTS.unshift(sRep);
-                            }
+                            if (!exists) RECENT_REPORTS.unshift(sRep);
                         });
-                        // Limitar a los 15 más recientes y guardar
                         RECENT_REPORTS = RECENT_REPORTS.slice(0, 15);
                         localStorage.setItem('RECENT_REPORTS', JSON.stringify(RECENT_REPORTS));
                     }
-
-                    if (!APP_DB.voluntarios) APP_DB.voluntarios = [];
-                    // Actualizar Muro si la vista está activa
-                    if (typeof renderVolFeed === 'function') renderVolFeed();
-
-                    document.getElementById('syncDot').classList.add('online');
-                    document.getElementById('syncText').textContent = 'Sincronizado';
+                    if (cb_opt) cb_opt(d);
                 } else {
-                    document.getElementById('syncDot').classList.remove('online');
-                    document.getElementById('syncText').textContent = 'Sin conexión';
+                    console.log('Error en Sincronización:', d.error);
                 }
             };
             var sc = document.createElement('script');
             sc.src = SCRIPT_URL + '?getAppDB=true&callback=' + cb;
             document.body.appendChild(sc);
         }
+
 
         // --- MÓDULO FAMILIAS ---
         function initFamilias() {
@@ -2679,14 +2720,21 @@
         }
 
         function volHidePost(id) {
-            if(!confirm("¿Deseas ocultar esta publicación para todos los usuarios? Esta acción no se puede deshacer fácilmente.")) return;
-            showLoader("Ocultando publicación...");
+            if(!confirm("¿Deseas ocultar esta publicación para todos los usuarios?")) return;
+            
+            // UI Optimista: Ocultar localmente al instante
+            HIDDEN_POSTS.push(id);
+            localStorage.setItem('HIDDEN_POSTS', JSON.stringify(HIDDEN_POSTS));
+            renderVolFeed(); // Desaparece al instante para Alexander
+            
+            showLoader("Ocultando publicación globalmente...");
             callAPI({ tipo: 'hide_comunidad_post', id: id }, function(d){
                 hideLoader();
                 vibe('SUCCESS');
-                syncDB();
+                syncDB(); // Sincroniza y confirma el borrado para los demás
             });
         }
+
 
         var VOL_LIKES = JSON.parse(localStorage.getItem('VOL_LIKES') || '{}');
 
