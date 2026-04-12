@@ -2765,7 +2765,7 @@
                 const likes = VOL_LIKES[id] || [];
                 const isLiked = likes.indexOf(USER.nombre) !== -1;
                 const authorsName = (item.type === 'photo' ? item.vol : item.voluntario);
-                const role = (item.rol || 'voluntario').toLowerCase();
+                const role = item.rol || 'Voluntario';
                 
                 var authorData = (APP_DB.voluntarios || []).find(v => norm(v.nombre) === norm(authorsName));
                 var authorPic = authorsName.charAt(0);
