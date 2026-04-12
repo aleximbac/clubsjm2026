@@ -744,9 +744,11 @@
         #syncBadge {
             position: fixed;
             top: 10px;
-            right: 15px;
-            z-index: 9999;
+            left: 15px; /* Movido a la izquierda para no tapar el botón SALIR */
+            right: auto;
+            z-index: 1100;
             background: rgba(255,255,255,0.9);
+
             backdrop-filter: blur(8px);
             padding: 4px 10px;
             border-radius: 20px;
@@ -926,10 +928,13 @@
             <div id="hTitle" style="font-weight:900; font-size:15px; letter-spacing:-0.5px; color:var(--text);">Club Juan Montalvo</div>
             <div id="hSub" style="font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Children International</div>
         </div>
-        <div id="headerActions" style="width:40px; display:flex; justify-content:flex-end;">
-            <button id="vLogoutBtn" onclick="goHome()" style="background:none; border:none; font-size:11px; font-weight:900; color:var(--primary); cursor:pointer; display:none; text-transform:uppercase;">Salir</button>
+        <div id="headerActions" style="width:50px; display:flex; justify-content:flex-end;">
+            <button id="vLogoutBtn" onclick="volLogout()" style="background:var(--bg); border:1px solid var(--border); font-size:10px; font-weight:900; color:var(--text); cursor:pointer; display:none; text-transform:uppercase; padding:6px 10px; border-radius:8px; align-items:center; gap:4px;">
+                <span>SALIR</span><span style="font-size:14px;">⎋</span>
+            </button>
             <div id="syncDot" class="sync-dot" style="display:none;"></div>
         </div>
+
     </header>
 
     <div id="globalLoader">
@@ -1812,7 +1817,8 @@
             }
 
             const logoutBtn = document.getElementById('vLogoutBtn');
-            if (logoutBtn) logoutBtn.style.display = (id === 'v-vol-dash') ? 'block' : 'none';
+            if (logoutBtn) logoutBtn.style.display = (id === 'v-vol-dash') ? 'flex' : 'none';
+
 
             window.scrollTo(0, 0);
         }
@@ -3865,9 +3871,11 @@
                     vibe('SUCCESS');
                     triggerGamification("¡Publicado en el muro con éxito!");
                     document.getElementById('postTextInp').value = '';
+                    if (POST_PHOTO_CACHE) clearPostPhoto();
                     toggleMuroPostBox();
-                    setTimeout(() => volSyncSistema(), 1500);
+                    syncDB(); // Cambiado a syncDB para refresco instantáneo y automático
                 } else {
+
                     showToast("Error al publicar: " + res.error, true);
                 }
             })
