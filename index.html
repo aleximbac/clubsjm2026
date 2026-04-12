@@ -714,52 +714,64 @@
             gap: 12px;
         }
 
-        /* ── DOCK PRO 2026 (BOTTOM NAV) ── */
+        /* ── DOCK PRO 2026 (5 ITEMS) ── */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
+            height: 65px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
             border-top: 1px solid var(--border);
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: center;
             z-index: 1000;
-            padding-bottom: env(safe-area-inset-bottom);
+            padding: 0 5px env(safe-area-inset-bottom) 5px;
             transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .bottom-nav.visible {
-            transform: translateY(0);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .nav-item {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: none;
-            border: none;
-            padding: 8px 0;
+            min-width: 0;
+            font-size: 9px;
+            letter-spacing: 0;
         }
 
         .nav-item i {
-            font-size: 18px;
-            margin-bottom: 2px;
-            font-style: normal;
+            font-size: 20px;
+        }
+
+        /* ── TIMELINE / MURO ── */
+        .timeline-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .feed-photo {
+            width: 100%;
+            height: 180px;
+            object-fit:cover;
+            border-radius: 12px;
+            margin-top: 10px;
+            background: #f1f5f9;
         }
 
         .nav-item.active {
@@ -1176,26 +1188,37 @@
                 <p style="text-align:center; font-size:11px; font-weight:700; color:var(--text-muted); opacity:0.8;">Tus datos están protegidos por la política de CI.</p>
             </div>
 
-            <!-- VOL-DASHBOARD -->
+            <!-- VOL-FEED (MURO DE NOVEDADES) - NUEVO PANTALLA INICIAL -->
+            <div class="view" id="v-vol-feed">
+                <div style="margin-bottom:20px; text-align:center;">
+                    <h2 style="font-weight:900; font-size:24px;">Muro del Club</h2>
+                    <p style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-top:5px;">Novedades en tiempo real</p>
+                </div>
+                <div id="feedContent" style="display:grid; gap:12px;">
+                    <!-- Actividad inyectada vía JS -->
+                </div>
+            </div>
+
+            <!-- VOL-DASHBOARD (GRUPOS) -->
             <div class="view" id="v-vol-dash">
-                <!-- Perfil Pro 2026 (Limpio) -->
                 <div class="card" style="display:flex; flex-direction:column; align-items:center; gap:16px; padding:24px; text-align:center; border:none; background:var(--primary-soft);">
                     <div style="width:80px; height:80px; position:relative;">
                         <img id="volProfileImg" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=V&background=1e3a8a&color=fff';" src="https://ui-avatars.com/api/?name=V&background=1e3a8a&color=fff" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:3px solid white; box-shadow:var(--shadow);" onclick="document.getElementById('volProfileInp').click()">
-                        <div style="position:absolute; bottom:0; right:0; background:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; border:1px solid var(--border);">📸</div>
                     </div>
                     <div>
                         <div style="font-size:11px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Miembro del Voluntariado</div>
                         <h2 style="font-weight:900; font-size:22px; color:var(--text);" id="volName">...</h2>
-                        <div style="font-size:13px; font-weight:600; color:var(--text-muted);" id="volGroupCount">0 Grupos asignados</div>
+                        <div style="font-size:13px; font-weight:600; color:var(--text-muted);">
+                             Total de grupos asignados: <span id="volGroupCount" style="font-weight:900; color:var(--text);">0</span>
+                        </div>
                     </div>
                 </div>
                 
                 <input type="file" id="volProfileInp" accept="image/*" style="display:none" onchange="uploadVolProfile(event)">
                 
                 <div style="margin:20px 0 12px; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase;">Área de Gestión</span>
-                    <button onclick="google.script.run.withSuccessHandler(init).initApp()" style="background:none; border:none; color:var(--primary); font-size:12px; font-weight:900; cursor:pointer;">Sincronizar Datos</button>
+                    <span style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase;">Control de Grupos</span>
+                    <button onclick="syncDB()" style="background:none; border:none; color:var(--primary); font-size:12px; font-weight:900; cursor:pointer;">Actualizar Datos</button>
                 </div>
                 <div id="volGroupsList" style="display:grid; gap:10px;"></div>
             </div>
@@ -1579,16 +1602,19 @@
             btn.style.display = showBack ? 'flex' : 'none';
             btn.onclick = backFn ? backFn : function () { history.back(); };
 
-            // --- LÓGICA DE DOCK PRO 2026 ---
+            // --- LÓGICA DE DOCK PRO 2026 (VISIBILIDAD Y ESTADO) ---
             const dock = document.getElementById('vBottomNav');
             const cont = document.querySelector('.container');
-            const volViews = ['v-vol-dash', 'v-vol-search', 'v-vol-justification', 'v-vol-change-list', 'v-vol-just-form'];
+            const volViews = ['v-vol-feed', 'v-vol-dash', 'v-vol-search', 'v-vol-justification', 'v-vol-change-list', 'v-vol-just-form'];
             const isVolView = volViews.some(vv => id === vv || id.startsWith('v-vol-search') || id.startsWith('v-vol-just'));
 
             if (USER && USER.rol && isVolView) {
                 if (dock) dock.classList.add('visible');
                 if (cont) cont.classList.add('nav-active');
+                
+                // Actualizar estado activo
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                if (id === 'v-vol-feed') document.getElementById('navFeed').classList.add('active');
                 if (id === 'v-vol-dash') document.getElementById('navHome').classList.add('active');
                 if (id === 'v-vol-search') document.getElementById('navSearch').classList.add('active');
                 if (id === 'v-vol-justification' || id === 'v-vol-just-form') document.getElementById('navJustify').classList.add('active');
@@ -1658,6 +1684,9 @@
                     }
 
                     if (!APP_DB.voluntarios) APP_DB.voluntarios = [];
+                    // Actualizar Muro si la vista está activa
+                    if (typeof renderVolFeed === 'function') renderVolFeed();
+
                     document.getElementById('syncDot').classList.add('online');
                     document.getElementById('syncText').textContent = 'Sincronizado';
                 } else {
@@ -2401,7 +2430,8 @@
         // --- MÓDULO VOLUNTARIOS ---
         function initVoluntarios() {
             if (USER && USER.encontrado) {
-                showVolDashboard();
+                renderVolFeed();
+                showView('v-vol-feed', 'Muro', 'Novedades', false);
             } else {
                 var saved = localStorage.getItem('volCreds');
                 if (saved) {
@@ -2444,7 +2474,8 @@
                         showView('v-vol-registro', 'Registro de Seguridad', 'Completa tus datos');
                     } else {
                         localStorage.setItem('volCreds', JSON.stringify({ u: u, p: p }));
-                        showVolDashboard();
+                        renderVolFeed();
+                        showView('v-vol-feed', 'Muro', 'Novedades', false);
                     }
                 } else {
                     localStorage.removeItem('volCreds');
@@ -2494,7 +2525,65 @@
             document.body.appendChild(sc);
         }
 
+        function renderVolFeed() {
+            const cont = document.getElementById('feedContent');
+            cont.innerHTML = '';
+
+            // 1. Obtener Historial Global (si no hay, usar locales)
+            let rawHistory = (APP_DB.asistencia_metrics && APP_DB.asistencia_metrics.historial_global) ? [...APP_DB.asistencia_metrics.historial_global] : [];
+            
+            // 2. Obtener fotos de comunidad
+            let photos = (APP_DB.comunidad_fotos) ? [...APP_DB.comunidad_fotos] : [];
+
+            // 3. Unificar y ordenar por fecha (simplificado para MVP)
+            // Se asume que el historial global ya viene ordenado
+            let history = rawHistory.slice(0, 5); // Solo últimos 5 eventos para no saturar
+
+            if (history.length === 0 && photos.length === 0) {
+                cont.innerHTML = '<div class="alert alert-info">Aún no hay actividad reciente en el club.</div>';
+                return;
+            }
+
+            // Renderizar Historial
+            history.forEach(h => {
+                const card = document.createElement('div');
+                card.className = 'timeline-card';
+                card.innerHTML = `
+                    <div style="font-size:12px; font-weight:900; color:var(--primary); margin-bottom:4px;">
+                        <span class="activity-dot"></span>${h.voluntario.split(' ')[0]} pasó asistencia
+                    </div>
+                    <div style="font-size:14px; font-weight:700;">Grupo: ${h.grupo}</div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">Asistieron ${h.asistentes.length || 0} niños · ${h.fecha}</div>
+                `;
+                cont.appendChild(card);
+            });
+
+            // Renderizar Fotos
+            if (photos.length > 0) {
+                 const photoSection = document.createElement('div');
+                 photoSection.innerHTML = '<div style="font-size:11px; font-weight:900; color:var(--text-muted); margin:10px 0 10px; text-transform:uppercase;">Fotos de la comunidad</div>';
+                 cont.appendChild(photoSection);
+
+                 photos.slice(-3).reverse().forEach(cf => {
+                    const card = document.createElement('div');
+                    card.className = 'timeline-card';
+                    var fileIdmatch = cf.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    var parsedId = fileIdmatch ? fileIdmatch[1] : '';
+                    var cUrl = parsedId ? 'https://drive.google.com/thumbnail?id=' + parsedId + '&sz=w600' : '';
+
+                    card.innerHTML = `
+                        <div style="font-size:12px; font-weight:900; color:var(--accent); margin-bottom:8px;">${cf.vol.split(' ')[0]} compartió un recuerdo</div>
+                        <img src="${cUrl}" class="feed-photo">
+                        <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-top:8px;">${cf.grupo} · ${cf.fecha}</div>
+                    `;
+                    cont.appendChild(card);
+                 });
+            }
+        }
+
         function showVolDashboard() {
+            // Refrescar Feed por seguridad si se entra desde el dock
+            renderVolFeed();
             // Coordinador o TODOS -> ver todos los grupos de la BD
             var esCoord = (USER.rol === 'coordinador' || USER.rol === 'admin');
             var gruposUser = [];
@@ -3763,8 +3852,11 @@
             if (botFabVol) makeDraggable(botFabVol);
         };
     </script>
-    <!-- DOCK PRO 2026 (BOTTOM NAV) -->
+    <!-- DOCK PRO 2026 (5 ITEMS) -->
     <nav id="vBottomNav" class="bottom-nav">
+        <button class="nav-item" onclick="vibe('CLICK'); renderVolFeed(); showView('v-vol-feed', 'Muro', 'Novedades', false)" id="navFeed">
+            <i>≋</i> <span>Muro</span>
+        </button>
         <button class="nav-item" onclick="vibe('CLICK'); showVolDashboard()" id="navHome">
             <i>⌂</i> <span>Grupos</span>
         </button>
