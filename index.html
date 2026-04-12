@@ -2692,6 +2692,7 @@
 
         function volToggleLike(id) {
             vibe('CLICK');
+            if (!USER) return; // Protección anti-crash
             if (!VOL_LIKES[id]) VOL_LIKES[id] = [];
             var idx = VOL_LIKES[id].indexOf(USER.nombre);
             if (idx === -1) VOL_LIKES[id].push(USER.nombre);
@@ -2700,10 +2701,12 @@
             renderVolFeed();
         }
 
+
         var HIDDEN_POSTS = JSON.parse(localStorage.getItem('HIDDEN_POSTS') || '[]');
 
         function volTogglePin(id, currentStatus) {
             vibe('STRONG');
+            if (!USER) return;
             var isPinned = currentStatus === "SI";
             var pinnedCount = (APP_DB.comunidad_fotos || []).filter(f => f.pinned === "SI").length;
             
@@ -2723,10 +2726,11 @@
                 hideLoader();
                 if (res.ok) {
                     showToast(isPinned ? "Publicación desanclada" : "📌 Publicación fijada en el muro");
-                    setTimeout(() => volSyncSistema(), 1000);
+                    setTimeout(() => syncDB(), 1000); // Cambiado a syncDB para mayor estabilidad
                 }
             });
         }
+
 
 
         function renderVolFeed() {
@@ -2741,13 +2745,12 @@
                         var fileIdmatch = USER.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         var pUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=200' : USER.foto;
                         av.innerHTML = `<img src="${pUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
-                    } else { av.textContent = USER.nombre.charAt(0); }
+                    } else { av.textContent = USER.nombre ? USER.nombre.charAt(0) : 'V'; }
                 }
             }
 
             let photos = (APP_DB.comunidad_fotos) ? [...APP_DB.comunidad_fotos] : [];
 
-            // Función para parsear fechas dd/mm/yyyy hh:mm de forma segura
             function parseFecha(s) {
                 if (!s || typeof s !== 'string') return 0;
                 try {
@@ -2759,15 +2762,14 @@
             }
 
             let combined = [];
-            // Las asistencias se mueven a la vista de grupos. El muro es solo para fotos y mensajes.
-            photos.forEach(p => combined.push({...p, type: 'photo', ts: parseFecha(p.fecha)}));
+            // Filtrar borrados globales y asistencias (ya se movieron a grupos)
+            photos.filter(p => p.pinned !== 'HIDDEN').forEach(p => combined.push({...p, type: 'photo', ts: parseFecha(p.fecha)}));
             
             combined = combined.filter(item => {
-                const id = (item.type === 'photo' ? (item.url || item.fecha) : (item.voluntario + item.fecha + item.grupo));
+                const id = (item.url || item.fecha);
                 return HIDDEN_POSTS.indexOf(id) === -1;
             });
 
-            // ORDENAR: Pinned primero, luego TS DESC
             combined.sort((a,b) => {
                 if (a.pinned === "SI" && b.pinned !== "SI") return -1;
                 if (a.pinned !== "SI" && b.pinned === "SI") return 1;
@@ -2775,7 +2777,7 @@
             });
 
             if (combined.length === 0) {
-                cont.innerHTML = '<div class="alert alert-info">¡Sé el primero en compartir algo!</div>';
+                cont.innerHTML = '<div class="alert alert-info" style="margin:20px; text-align:center;">¡Sé el primero en compartir algo!</div>';
                 return;
             }
 
@@ -2787,12 +2789,10 @@
                 card.className = 'timeline-card' + (item.pinned === "SI" ? ' pinned' : '');
                 if (item.pinned === "SI") card.style.borderLeft = '4px solid var(--accent)';
                 
-                const id = (item.type === 'photo' ? (item.url || item.fecha) : (item.voluntario + item.fecha + item.grupo));
+                const id = (item.url || item.fecha);
                 const likes = VOL_LIKES[id] || [];
-                const isLiked = likes.indexOf(USER.nombre) !== -1;
-                const authorsName = (item.type === 'photo' ? item.vol : item.voluntario);
+                const authorsName = item.vol || item.voluntario || "Anónimo";
                 
-                // --- SINCRONIZACIÓN DE ROL ATEMPORAL (DINÁMICA) ---
                 var authorData = (APP_DB.voluntarios || []).find(v => norm(v.nombre) === norm(authorsName));
                 const role = (authorData && authorData.rol) ? authorData.rol : (item.rol || 'Voluntario');
                 
@@ -2804,7 +2804,7 @@
                 }
 
                 let pinBtn = '';
-                if (isCoord && item.type === 'photo') {
+                if (isCoord) {
                     pinBtn = `<button onclick="volTogglePin('${id}', '${item.pinned}')" style="background:${item.pinned==='SI'?'var(--accent)':'#f1f5f9'}; color:${item.pinned==='SI'?'white':'#64748b'}; border:none; border-radius:8px; padding:4px 8px; font-size:10px; font-weight:800; cursor:pointer; margin-left:auto;">${item.pinned==='SI'?'📌 FIJADO':'📍 FIJAR'}</button>`;
                 }
 
@@ -2815,74 +2815,50 @@
                 let gText = item.grupo === 'General' ? 'TODOS' : item.grupo;
                 let likeText = likes.length > 0 ? (likes.length === 1 ? `Le gusta a ${likes[0]}` : `A ${likes[0]} y ${likes.length-1} más...`) : "";
 
-                if (item.type === 'activity') {
-                    // --- ESTILO SOCIAL PARA ASISTENCIAS ---
-                    card.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                            <div style="width:40px; height:40px; border-radius:12px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); overflow:hidden; border:1px solid var(--border);">${authorPic}</div>
-                            <div style="flex:1;">
-                                <div style="font-size:14px; font-weight:900; display:flex; align-items:center;">${authorsName}${roleBadge}</div>
-                                <div style="font-size:10px; color:var(--text-muted); font-weight:700;">${item.fecha}</div>
-                            </div>
-                        </div>
-                        <div style="background:#f0f9ff; border-radius:14px; padding:16px; border:1px solid #bae6fd; display:flex; align-items:center; gap:12px; word-break:break-word;">
-                            <span style="font-size:24px;">✅</span>
-                            <div style="font-size:14px; font-weight:700; color:#0369a1; line-height:1.3;">
-                                Tomó asistencia exitosa para:<br>
-                                <span style="color:var(--primary); font-size:16px;">${gText}</span>
-                            </div>
-                        </div>
-                        <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-                             <button onclick="volHidePost('${id}')" style="background:none; border:none; color:var(--text-muted); font-size:11px; font-weight:700; cursor:pointer;">Ocultar</button>
-                        </div>
-                    `;
-                } else if (item.type === 'photo') { 
-                    // PHOTO / TEXT POST
-                    var bodyHtml = '';
-                    if (item.url) {
-                        var fileIdmatch = item.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                        var cUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=1000' : item.url;
-                        bodyHtml = `<img src="${cUrl}" style="width:100%; border-radius:14px; margin-top:10px; cursor:zoom-in;" onclick="window.open('${item.url}', '_blank')">`;
-                    }
-                    
-                    // Si es solo texto, le damos un estilo más "premium" y RESPONSIVO
-                    let textStyle = item.url ? 'margin-top:12px; font-size:14px;' : 'margin-top:10px; font-size:17px; background:var(--bg); padding:16px; border-radius:14px; border:1px dashed var(--border);';
-                    
-                    if (item.texto) {
-                        bodyHtml += `<div style="${textStyle} font-weight:700; line-height:1.4; color:var(--text); word-break:break-word; overflow-wrap:break-word;">${item.texto}</div>`;
-                    }
-                    
-                    // Solo Administrador o Autor pueden borrar globalmente
-                    let isAdmin = (norm(USER.nombre).includes("alexander") || norm(USER.nombre).includes("castro"));
-                    let isAuthor = (norm(item.vol) === norm(USER.nombre));
-                    let hideBtn = (isAdmin || isAuthor) ? `<button onclick="volHidePost('${id}')" style="background:#f1f5f9; border:none; color:var(--text-muted); padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">Ocultar Publicación</button>` : "";
-
-                    card.innerHTML = `
-                        <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; position:relative;">
-                            <div style="width:40px; height:40px; border-radius:12px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); overflow:hidden; border:1px solid var(--border); flex-shrink:0;">${authorPic}</div>
-                            <div style="flex:1; min-width:0;">
-                                <div style="font-size:14px; font-weight:900; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px;">
-                                    <div style="word-break:break-word; max-width:100%;">${displayName}${roleBadge}</div>
-                                    ${pinBtn}
-                                </div>
-                                <div style="font-size:10px; color:var(--text-muted); font-weight:700;">${item.fecha} · ${gText}</div>
-                            </div>
-                        </div>
-                        ${bodyHtml}
-                        <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; border-top:1px solid #f1f5f9; padding-top:12px;">
-                            <div onclick="volToggleLike('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
-                                <span style="font-size:20px;">${isLiked?'❤️':'♡'}</span>
-                                <span style="font-size:11px; font-weight:800; color:var(--text-muted);">${likeText}</span>
-                            </div>
-                            ${hideBtn}
-                        </div>
-                    `;
-
-
+                var bodyHtml = '';
+                if (item.url) {
+                    var fileIdmatch = item.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    var cUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=1000' : item.url;
+                    bodyHtml = `<img src="${cUrl}" style="width:100%; border-radius:14px; margin-top:10px; cursor:zoom-in;" onclick="window.open('${item.url}', '_blank')">`;
                 }
+                
+                let textStyle = item.url ? 'margin-top:12px; font-size:14px;' : 'margin-top:10px; font-size:17px; background:var(--bg); padding:16px; border-radius:14px; border:1px dashed var(--border);';
+                if (item.texto) {
+                    bodyHtml += `<div style="${textStyle} font-weight:700; line-height:1.4; color:var(--text); word-break:break-word; overflow-wrap:break-word;">${item.texto}</div>`;
+                }
+                
+                let displayName = String(authorsName);
+                if (displayName.startsWith("http")) displayName = "Participante";
+
+                let canHide = USER && (norm(USER.nombre).includes("alexander") || norm(USER.nombre).includes("castro") || norm(item.vol) === norm(USER.nombre));
+                let hideBtn = canHide ? `<button onclick="volHidePost('${id}')" style="background:#f1f5f9; border:none; color:var(--text-muted); padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">Ocultar Publicación</button>` : "";
+                
+                let isLiked = USER ? (likes.indexOf(USER.nombre) !== -1) : false;
+
+                card.innerHTML = `
+                    <div style="display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; position:relative;">
+                        <div style="width:40px; height:40px; border-radius:12px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); overflow:hidden; border:1px solid var(--border); flex-shrink:0;">${authorPic}</div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:14px; font-weight:900; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px;">
+                                <div style="word-break:break-word; max-width:100%;">${displayName}${roleBadge}</div>
+                                ${pinBtn}
+                            </div>
+                            <div style="font-size:10px; color:var(--text-muted); font-weight:700;">${item.fecha} · ${gText}</div>
+                        </div>
+                    </div>
+                    ${bodyHtml}
+                    <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; border-top:1px solid #f1f5f9; padding-top:12px;">
+                        <div onclick="volToggleLike('${id}')" style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+                            <span style="font-size:20px;">${isLiked?'❤️':'♡'}</span>
+                            <span style="font-size:11px; font-weight:800; color:var(--text-muted);">${likeText}</span>
+                        </div>
+                        ${hideBtn}
+                    </div>
+                `;
                 cont.appendChild(card);
             });
         }
+
 
 
         function showVolDashboard() {
