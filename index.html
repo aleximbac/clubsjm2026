@@ -2744,7 +2744,7 @@
             }
 
             let combined = [];
-            rawHistory.slice(0, 10).forEach(h => combined.push({...h, type: 'activity', ts: parseFecha(h.fecha), pinned: "NO"}));
+            // Eliminamos rawHistory para evitar confusión con posts automáticos de asistencia.
             photos.forEach(p => combined.push({...p, type: 'photo', ts: parseFecha(p.fecha)}));
             
             combined = combined.filter(item => {
@@ -2776,9 +2776,11 @@
                 const likes = VOL_LIKES[id] || [];
                 const isLiked = likes.indexOf(USER.nombre) !== -1;
                 const authorsName = (item.type === 'photo' ? item.vol : item.voluntario);
-                const role = item.rol || 'Voluntario';
                 
+                // --- SINCRONIZACIÓN DE ROL ATEMPORAL (DINÁMICA) ---
                 var authorData = (APP_DB.voluntarios || []).find(v => norm(v.nombre) === norm(authorsName));
+                const role = (authorData && authorData.rol) ? authorData.rol : (item.rol || 'Voluntario');
+                
                 var authorPic = authorsName.charAt(0);
                 if (authorData && authorData.foto) {
                     var mid = authorData.foto.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -2797,20 +2799,7 @@
 
                 let likeText = likes.length > 0 ? (likes.length === 1 ? `Le gusta a ${likes[0]}` : `A ${likes[0]} y ${likes.length-1} más...`) : "";
 
-                if (item.type === 'activity') {
-                    card.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                            <div style="width:38px; height:38px; border-radius:12px; background:var(--primary-soft); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--primary); overflow:hidden;">${authorPic}</div>
-                            <div style="flex:1;">
-                                <div style="font-size:14px; font-weight:900;">${authorsName}${roleBadge}</div>
-                                <div style="font-size:10px; color:var(--text-muted); font-weight:700;">${item.fecha}</div>
-                            </div>
-                        </div>
-                        <div style="background:#f8fafc; border-radius:12px; padding:12px; font-size:13px; font-weight:700; border:1px solid #e2e8f0;">
-                            ✅ Reportó asistencia exitosa para <span style="color:var(--primary);">${item.grupo}</span>.
-                        </div>
-                    `;
-                } else {
+                if (item.type === 'photo') { 
                     // PHOTO / TEXT POST
                     var bodyHtml = '';
                     if (item.url) {
@@ -2818,9 +2807,14 @@
                         var cUrl = fileIdmatch ? 'https://drive.google.com/thumbnail?id=' + fileIdmatch[1] + '&sz=1000' : item.url;
                         bodyHtml = `<img src="${cUrl}" style="width:100%; border-radius:14px; margin-top:10px; cursor:zoom-in;" onclick="window.open('${item.url}', '_blank')">`;
                     }
+                    
+                    // Si es solo texto, le damos un estilo más "premium"
+                    let textStyle = item.url ? 'margin-top:12px; font-size:14px;' : 'margin-top:10px; font-size:17px; background:var(--bg); padding:16px; border-radius:14px; border:1px dashed var(--border);';
+                    
                     if (item.texto) {
-                        bodyHtml += `<div style="margin-top:12px; font-size:14px; font-weight:700; line-height:1.4; color:var(--text);">${item.texto}</div>`;
+                        bodyHtml += `<div style="${textStyle} font-weight:700; line-height:1.4; color:var(--text);">${item.texto}</div>`;
                     }
+
                     
                     card.innerHTML = `
                         <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
