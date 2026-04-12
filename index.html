@@ -13,21 +13,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1e40af;
-            --primary-soft: #f1f5f9;
-            --accent: #d97706;
-            --success: #15803d;
-            --danger: #b91c1c;
+            --primary: #1e3a8a; /* Azul marino profundo pro */
+            --primary-dark: #172554;
+            --primary-soft: #f8fafc;
+            --accent: #0f172a;
+            --success: #059669;
+            --danger: #dc2626;
             
-            --bg-base: #ffffff;
+            --bg-base: #f1f5f9;
             --card: #ffffff;
-            --text: #111827;
-            --text-muted: #4b5563;
-            --border: #e5e7eb;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
             
-            --radius: 12px;
-            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --radius-sm: 8px;
+            --radius: 14px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
         }
 
         * {
@@ -586,17 +587,26 @@
             border-radius: 50%;
             object-fit: cover;
             background: #f1f5f9;        /* ── MURAL DEL CLUB (PREMIUM GALLERY) ── */
+        #comFotoFeed {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 4px 0 20px 0;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none; /* Firefox */
+        }
         #comFotoFeed::-webkit-scrollbar { display: none; }
         
         .mural-card {
-            flex: 0 0 140px; /* Un poco más pequeño para dar aire */
-            height: 200px;
+            flex: 0 0 130px;
+            height: 180px;
             position: relative;
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
             background: var(--border);
-            scroll-snap-align: start;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            scroll-snap-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .mural-card:active {
@@ -704,34 +714,85 @@
             gap: 12px;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
-            }
+        /* ── DOCK PRO 2026 (BOTTOM NAV) ── */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            padding-bottom: env(safe-area-inset-bottom);
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .bottom-nav.visible {
+            transform: translateY(0);
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: none;
+            border: none;
+            padding: 8px 0;
+        }
+
+        .nav-item i {
+            font-size: 18px;
+            margin-bottom: 2px;
+            font-style: normal;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item:active {
+            transform: scale(0.92);
+        }
+
+        /* Espaciado para cuando el dock está activo */
+        .container.nav-active {
+            padding-bottom: 90px !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 
 <body>
 
-    <header>
-        <button id="backBtn" onclick="goHome()"
-            style="background:none; border:none; font-size:20px; cursor:pointer; display:none;">←</button>
-        <div style="font-weight:900; font-size:16px; flex:1; text-align:center;">
-            <span id="hTitle">Mi Club 2026</span>
-            <p id="hSub" style="font-size:11px; font-weight:800; color:var(--text-muted);">Children International 2026
-            </p>
+    <header id="mainHeader" style="display:flex; align-items:center; padding:12px 16px; background:white; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1001; min-height:64px;">
+        <button id="backBtn" style="background:none; border:none; font-size:20px; color:var(--text); cursor:pointer; width:40px; text-align:left; display:none;">←</button>
+        <div style="flex:1; text-align:center;">
+            <div id="hTitle" style="font-weight:900; font-size:15px; letter-spacing:-0.5px; color:var(--text);">Club Juan Montalvo</div>
+            <div id="hSub" style="font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Children International</div>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-            <span id="syncText"
-                style="font-size:9px; font-weight:800; color:var(--text-muted); text-transform:uppercase;">Sync...</span>
-            <div id="syncDot" class="sync-dot"></div>
+        <div id="headerActions" style="width:40px; display:flex; justify-content:flex-end;">
+            <button id="vLogoutBtn" onclick="goHome()" style="background:none; border:none; font-size:11px; font-weight:900; color:var(--primary); cursor:pointer; display:none; text-transform:uppercase;">Salir</button>
+            <div id="syncDot" class="sync-dot" style="display:none;"></div>
         </div>
     </header>
 
@@ -754,19 +815,11 @@
             
             <div style="display:grid; gap:12px;">
                 <div class="card" onclick="navTo('familias')" style="cursor:pointer; display:flex; align-items:center; gap:16px; padding:20px; border:1px solid #ddd;">
-                    <div style="font-size:28px;">🏘️</div>
-                    <div style="flex:1;">
-                        <h3 style="font-weight:900; font-size:18px; color:var(--text);">Soy Familia</h3>
-                        <p style="font-size:13px; color:var(--text-muted); font-weight:600;">Pagos, horarios y mingas</p>
-                    </div>
+                    <div style="font-weight:900; font-size:18px; color:var(--text); flex:1;">Perfil Familia</div>
                 </div>
 
                 <div class="card" onclick="navTo('voluntarios')" style="cursor:pointer; display:flex; align-items:center; gap:16px; padding:20px; border:2px solid var(--primary); background:var(--primary-soft);">
-                    <div style="font-size:28px;">🛡️</div>
-                    <div style="flex:1;">
-                        <h3 style="font-weight:900; font-size:18px; color:var(--primary);">Voluntariado</h3>
-                        <p style="font-size:13px; color:var(--primary-dark); font-weight:600;">Asistencia y gestión de grupos</p>
-                    </div>
+                    <div style="font-weight:900; font-size:18px; color:var(--primary); flex:1;">Voluntariado Pro</div>
                 </div>
             </div>
             
@@ -1105,8 +1158,7 @@
             <!-- VOL-REGISTRO-PRIMERA-VEZ -->
             <div class="view v-centered-view" id="v-vol-registro">
                 <div style="text-align:center; margin-bottom:25px;">
-                    <div style="font-size:32px; background:var(--primary-soft); width:64px; height:64px; border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 15px;">👋</div>
-                    <h2 style="font-weight:900; font-size:22px;">¡Bienvenido/a, <span id="volRegName" style="color:var(--primary);">...</span>!</h2>
+                    <h2 style="font-weight:900; font-size:22px;">Bienvenido/a, <span id="volRegName" style="color:var(--primary);">...</span></h2>
                     <p style="font-size:14px; color:var(--text-muted); font-weight:700; margin-top:5px;">Para tu seguridad, completa tu perfil oficial de voluntariado.</p>
                 </div>
                 
@@ -1126,28 +1178,24 @@
 
             <!-- VOL-DASHBOARD -->
             <div class="view" id="v-vol-dash">
-                <!-- Header horizontal con Salir -->
-                <div class="card" style="padding:16px; margin-bottom:20px; border-bottom:4px solid var(--primary); position:relative;">
-                    <button class="btn btn-outline" onclick="goHome()" style="position:absolute; top:12px; right:12px; width:auto; padding:6px 12px; font-size:11px; font-weight:900; background:var(--primary-soft); color:var(--primary); border:none; border-radius:8px;">🚪 SALIR</button>
-                    
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="width:50px; height:50px; flex-shrink:0; position:relative;">
-                            <img id="volProfileImg" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=V&background=2563eb&color=fff';" src="https://ui-avatars.com/api/?name=V&background=2563eb&color=fff" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:2px solid #ddd; cursor:pointer;" onclick="document.getElementById('volProfileInp').click()">
-                            <div style="position:absolute; bottom:0; right:0; background:white; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; border:1px solid #ddd;">📸</div>
-                        </div>
-                        <div style="padding-right:70px;"> <!-- Espacio para el botón Salir -->
-                            <div style="font-size:10px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:1px;">Voluntario CI</div>
-                            <h2 style="font-weight:900; font-size:16px; line-height:1.2; word-break:break-word;">Hola, <span id="volName">...</span></h2>
-                            <div style="font-size:11px; font-weight:700; color:var(--text-muted);" id="volGroupCount">0 Grupos</div>
-                        </div>
+                <!-- Perfil Pro 2026 (Limpio) -->
+                <div class="card" style="display:flex; flex-direction:column; align-items:center; gap:16px; padding:24px; text-align:center; border:none; background:var(--primary-soft);">
+                    <div style="width:80px; height:80px; position:relative;">
+                        <img id="volProfileImg" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=V&background=1e3a8a&color=fff';" src="https://ui-avatars.com/api/?name=V&background=1e3a8a&color=fff" style="width:100%; height:100%; object-fit:cover; border-radius:50%; border:3px solid white; box-shadow:var(--shadow);" onclick="document.getElementById('volProfileInp').click()">
+                        <div style="position:absolute; bottom:0; right:0; background:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; border:1px solid var(--border);">📸</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Miembro del Voluntariado</div>
+                        <h2 style="font-weight:900; font-size:22px; color:var(--text);" id="volName">...</h2>
+                        <div style="font-size:13px; font-weight:600; color:var(--text-muted);" id="volGroupCount">0 Grupos asignados</div>
                     </div>
                 </div>
                 
                 <input type="file" id="volProfileInp" accept="image/*" style="display:none" onchange="uploadVolProfile(event)">
                 
-                <div style="font-size:11px; font-weight:900; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px; padding-left:4px; display:flex; justify-content:space-between; align-items:center;">
-                    <span>Mis Grupos CI</span>
-                    <span onclick="google.script.run.withSuccessHandler(init).initApp()" style="color:var(--primary); font-size:10px; cursor:pointer;">🔄 Sincronizar</span>
+                <div style="margin:20px 0 12px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase;">Área de Gestión</span>
+                    <button onclick="google.script.run.withSuccessHandler(init).initApp()" style="background:none; border:none; color:var(--primary); font-size:12px; font-weight:900; cursor:pointer;">Sincronizar Datos</button>
                 </div>
                 <div id="volGroupsList" style="display:grid; gap:10px;"></div>
             </div>
@@ -1515,65 +1563,57 @@
 
         // --- NAVEGACIÓN CON HISTORIAL NATIVO (SWIPE BACK) ---
         function showView(id, title, sub, showBack = true, backFn = null) {
-            // Guardar un identificador de la función de retorno si existe
             var state = { id: id, mTitle: title, mSub: sub, showBack: showBack };
-            
-            if (window.location.hash !== '#' + id) {
-                history.pushState(state, '', '#' + id);
-            }
+            if (window.location.hash !== '#' + id) history.pushState(state, '', '#' + id);
 
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             const v = document.getElementById(id);
             if (v) v.classList.add('active');
 
             var hT = document.getElementById('hTitle');
-            if (hT) hT.textContent = title || "Mi Club 2026";
+            if (hT) hT.textContent = title || "Club Juan Montalvo";
             var hS = document.getElementById('hSub');
-            if (hS) hS.textContent = sub || "Children International 2026";
+            if (hS) hS.textContent = sub || "Children International";
 
             const btn = document.getElementById('backBtn');
             btn.style.display = showBack ? 'flex' : 'none';
-
-            // Usar backFn si se provee, si no, history.back()
             btn.onclick = backFn ? backFn : function () { history.back(); };
+
+            // --- LÓGICA DE DOCK PRO 2026 ---
+            const dock = document.getElementById('vBottomNav');
+            const cont = document.querySelector('.container');
+            const volViews = ['v-vol-dash', 'v-vol-search', 'v-vol-justification', 'v-vol-change-list', 'v-vol-just-form'];
+            const isVolView = volViews.some(vv => id === vv || id.startsWith('v-vol-search') || id.startsWith('v-vol-just'));
+
+            if (USER && USER.rol && isVolView) {
+                if (dock) dock.classList.add('visible');
+                if (cont) cont.classList.add('nav-active');
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                if (id === 'v-vol-dash') document.getElementById('navHome').classList.add('active');
+                if (id === 'v-vol-search') document.getElementById('navSearch').classList.add('active');
+                if (id === 'v-vol-justification' || id === 'v-vol-just-form') document.getElementById('navJustify').classList.add('active');
+                if (id === 'v-vol-change-list') document.getElementById('navManage').classList.add('active');
+            } else {
+                if (dock) dock.classList.remove('visible');
+                if (cont) cont.classList.remove('nav-active');
+            }
+
+            const logoutBtn = document.getElementById('vLogoutBtn');
+            if (logoutBtn) logoutBtn.style.display = (id === 'v-vol-dash') ? 'block' : 'none';
 
             window.scrollTo(0, 0);
         }
 
         // Interceptar botón atrás / Gesto de Swipe Back en móviles
         window.addEventListener('popstate', function (e) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             if (e.state && e.state.id) {
-                var target = document.getElementById(e.state.id);
-                if (target) target.classList.add('active');
-
-                var hT = document.getElementById('hTitle');
-                if (hT) hT.textContent = e.state.mTitle || "Mi Club 2026";
-                var hS = document.getElementById('hSub');
-                if (hS) hS.textContent = e.state.mSub || "Children International";
-
-                var btn = document.getElementById('backBtn');
-                btn.style.display = e.state.showBack ? 'flex' : 'none';
-                
-                // Asegurar que regresamos al tope de la pantalla (muy importante para barras fijas)
-                window.scrollTo(0, 0);
-                
-                // --- HOOKS DE RE-INICIALIZACIÓN ---
-                // Si regresamos a la lista de cambio de horario, recuperar el grupo y refrescar
+                showView(e.state.id, e.state.mTitle, e.state.mSub, e.state.showBack);
                 if (e.state.id === 'v-vol-change-list') {
                     if (e.state.mSub) VOL_CHANGE.grupo = e.state.mSub;
                     if (typeof volFilterChildren === 'function') volFilterChildren();
                 }
             } else {
-                // Fallback al inicio
-                if (USER && USER.rol) {
-                    showVolDashboard(); 
-                } else {
-                    document.getElementById('v-portal').classList.add('active');
-                    document.getElementById('backBtn').style.display = 'none';
-                    var hT = document.getElementById('hTitle');
-                    if (hT) hT.textContent = "Mi Club 2026";
-                }
+                goHome();
             }
         });
 
@@ -2494,22 +2534,7 @@
             var list = document.getElementById('volGroupsList');
             list.innerHTML = '';
 
-            // Header con rol y boton logout
-            var hdr = document.createElement('div');
-            hdr.innerHTML = '<div style="background:linear-gradient(135deg, var(--primary), var(--primary-dark)); padding:20px 15px; margin:-15px -15px 20px -15px; border-radius:0 0 20px 20px; color:white; box-shadow:0 10px 20px rgba(59,130,246,0.3); position:relative;">'
-                + '<div style="display:flex; justify-content:space-between; align-items:center;">'
-                + '<h2 style="margin:0; font-weight:900; font-size:22px;">Children International</h2>'
-                + '<button onclick="volLogout()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:6px 12px; border-radius:12px; font-weight:800; font-size:12px; cursor:pointer; backdrop-filter:blur(5px);">Salir</button>'
-                + '</div>'
-                + '<div style="margin-top:20px; font-size:14px; font-weight:700; opacity:0.9;">¡Hola de nuevo, ' + String(USER.nombre).split(" ")[0] + '! Eres nuestro/a ' + String(USER.rol || 'voluntario/a').toUpperCase() + ' estrella ⭐</div>'
-                + '</div>'
-                + '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">'
-                + '<button onclick="volShowSearch(\'vol_query\')" style="background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔍 Horarios</button>'
-                + '<button onclick="volShowJustification()" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">📝 Justificar</button>'
-                + '<button onclick="volSyncSistema()" style="background:var(--primary-soft); color:var(--primary); border:1px solid var(--primary-soft); border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔄 Sync</button>'
-                + '</div>'
-                + '<button onclick="volShowSearch(\'vol_move_kid\')" style="margin-top:8px; width:100%; background:#fef3c7; color:#b45309; border:1px solid #fde68a; border-radius:12px; padding:12px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">🔄 Cambio de Horario General</button>';
-            list.appendChild(hdr);
+            // Ya no inyectamos hdr aquí (era redundante y antiguo)
 
             if (esCoord) {
                 var m = APP_DB.asistencia_metrics || { total: 0, porSector: {}, porEdad: {}, porGrupo: {} };
@@ -2517,8 +2542,8 @@
                 var bestAge = Object.keys(m.porEdad).sort(function (a, b) { return m.porEdad[b] - m.porEdad[a]; })[0] || "N/A";
 
                 var adminDiv = document.createElement('div');
-                adminDiv.style.cssText = 'margin-bottom:20px; padding:15px; background:linear-gradient(135deg, #1e3a8a, #3b82f6); border-radius:15px; color:white; box-shadow:0 4px 15px rgba(59,130,246,0.3);';
-                adminDiv.innerHTML = '<div style="font-size:11px; font-weight:900; opacity:0.9; margin-bottom:12px; letter-spacing:0.5px;">⚡ PANEL COORDINADOR</div>'
+                adminDiv.style.cssText = 'margin-bottom:20px; padding:15px; background:var(--accent); border-radius:15px; color:white; box-shadow:var(--shadow);';
+                adminDiv.innerHTML = '<div style="font-size:11px; font-weight:900; opacity:0.9; margin-bottom:12px; letter-spacing:0.5px; text-transform:uppercase;">Panel de Coordinación</div>'
                     + '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">'
                     + '<div style="background:rgba(255,255,255,0.1); padding:12px 10px; border-radius:12px; text-align:center;">'
                     + '<div style="font-size:28px; font-weight:900; line-height:1;">' + m.total + '</div>'
@@ -2545,11 +2570,11 @@
             comDiv.style.cssText = 'margin-bottom:20px;';
             comDiv.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding:0 5px;">
-                    <div style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase; letter-spacing:1px;">📸 Muro del Club</div>
-                    <button onclick="document.getElementById('comFotoInp').click()" style="background:var(--primary); color:white; border:none; border-radius:12px; padding:8px 16px; font-size:11px; font-weight:900; cursor:pointer; box-shadow:var(--shadow-sm);">+ Subir Recuerdo</button>
+                    <div style="font-size:12px; font-weight:900; color:var(--text); text-transform:uppercase; letter-spacing:1px;">Muro del Club</div>
+                    <button onclick="document.getElementById('comFotoInp').click()" style="background:var(--primary); color:white; border:none; border-radius:12px; padding:8px 16px; font-size:11px; font-weight:900; cursor:pointer; box-shadow:var(--shadow);">Subir Recuerdo</button>
                 </div>
                 <input type="file" id="comFotoInp" accept="image/*" style="display:none" onchange="uploadComunidadFoto(event)">
-                <div style="display:flex; gap:12px; overflow-x:auto; padding:5px 20px 25px 20px; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; margin-left:-20px; margin-right:-20px;" id="comFotoFeed"></div>
+                <div id="comFotoFeed"></div>
             `;
             list.appendChild(comDiv);
 
@@ -2602,14 +2627,11 @@
                     var banner = document.createElement('div');
                     banner.className = 'pending-resume-banner';
                     banner.innerHTML = `
-                        <div style="font-size:24px;">⚠️</div>
                         <div style="flex:1;" onclick="resumeDraft()">
-                            <div style="font-weight:900; font-size:14px; color:#92400e;">Reporte interrumpido</div>
+                            <div style="font-weight:900; font-size:14px; color:#92400e; text-transform:uppercase; letter-spacing:0.5px;">Reporte interrumpido</div>
                             <div style="font-size:11px; font-weight:700; color:#b45309;">Tienes un registro de <b>${dObj.grupo}</b> pendiente. Toca aquí para recuperarlo.</div>
                         </div>
-                        <div onclick="event.stopPropagation(); if(confirm('¿Descartar este borrador?')) { localStorage.removeItem('DRAFT_ATT'); showVolDashboard(); }" 
-                             style="padding:10px; font-size:18px; color:#b45309; cursor:pointer; opacity:0.6;">✕</div>
-                    `;
+`;
 
                     // Mover el onclick principal a una función interna para evitar conflictos con el botón de cerrar
                     window.resumeDraft = function() {
@@ -2641,12 +2663,9 @@
                 centralBox.style.marginBottom = '20px';
                 
                 var btnTomarAsistencia = `
-                    <div style="padding:20px 16px; background:linear-gradient(135deg, var(--primary), #4f46e5); color:white; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-weight:900; font-size:16px;">Toma de Asistencia</div>
-                            <div style="font-size:11px; font-weight:700; opacity:0.9;">Selecciona tu grupo programado</div>
-                        </div>
-                        <div style="font-size:24px;">📋</div>
+                    <div style="padding:16px; background:var(--primary); color:white; border-bottom:1px solid rgba(255,255,255,0.1);">
+                        <div style="font-weight:900; font-size:14px; text-transform:uppercase; letter-spacing:1px; opacity:0.8;">Toma de Asistencia</div>
+                        <div style="font-size:12px; font-weight:600; margin-top:4px;">Selecciona tu grupo programado</div>
                     </div>
                 `;
                 
@@ -2678,13 +2697,7 @@
                 RECENT_REPORTS.forEach((rep, idx) => {
                     var pill = document.createElement('div');
                     pill.className = 'recent-report-pill';
-                    pill.onclick = function() {
-                        vibe('CLICK');
-                        renderSummaryCard(rep);
-                        showView('v-vol-att-resumen', rep.grupo, 'Respaldo Recuperado', true, showVolDashboard);
-                    };
                     pill.innerHTML = `
-                        <div style="width:40px; height:40px; background:var(--primary-soft); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px;">🖼️</div>
                         <div style="flex:1;">
                             <div style="font-weight:900; font-size:14px; color:var(--primary);">${rep.grupo}</div>
                             <div style="font-size:11px; font-weight:700; color:var(--text-muted);">${rep.fecha} · ${rep.asistentes.length} presentes</div>
@@ -2696,7 +2709,7 @@
                 list.appendChild(repContainer);
             }
 
-            showView('v-vol-dash', 'Gestión Club', USER.nombre, true, goHome);
+            showView('v-vol-dash', 'Gestión Club', USER.nombre, false, goHome);
         }
 
         var ATT_STATE = { grupo: null, presentes: {}, voluntariosPresentes: {}, mode: 'manual' };
@@ -3750,6 +3763,21 @@
             if (botFabVol) makeDraggable(botFabVol);
         };
     </script>
+    <!-- DOCK PRO 2026 (BOTTOM NAV) -->
+    <nav id="vBottomNav" class="bottom-nav">
+        <button class="nav-item" onclick="vibe('CLICK'); showVolDashboard()" id="navHome">
+            <i>⌂</i> <span>Grupos</span>
+        </button>
+        <button class="nav-item" onclick="vibe('CLICK'); volShowSearch('vol_query')" id="navSearch">
+            <i>🔍</i> <span>Horarios</span>
+        </button>
+        <button class="nav-item" onclick="vibe('CLICK'); volShowJustification()" id="navJustify">
+            <i>📝</i> <span>Justificar</span>
+        </button>
+        <button class="nav-item" onclick="vibe('CLICK'); volShowSearch('vol_move_kid')" id="navManage">
+            <i>⚙️</i> <span>Gestión</span>
+        </button>
+    </nav>
 </body>
 
 </html>
