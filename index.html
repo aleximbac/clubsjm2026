@@ -2887,9 +2887,11 @@
                     bodyHtml = `<img src="${cUrl}" style="width:100%; border-radius:14px; margin-top:10px; cursor:zoom-in;" onclick="window.open('${item.url}', '_blank')">`;
                 }
                 
+                const msg = String(item.texto || "").trim();
                 let textStyle = item.url ? 'margin-top:12px; font-size:14px;' : 'margin-top:10px; font-size:17px; background:var(--bg); padding:16px; border-radius:14px; border:1px dashed var(--border);';
-                if (item.texto) {
-                    bodyHtml += `<div style="${textStyle} font-weight:700; line-height:1.4; color:var(--text); word-break:break-word; overflow-wrap:break-word;">${item.texto}</div>`;
+                
+                if (msg) {
+                    bodyHtml += `<div style="${textStyle} font-weight:700; line-height:1.4; color:var(--text); word-break:break-word; overflow-wrap:break-word;">${msg}</div>`;
                 }
                 
                 let displayName = String(authorsName);
